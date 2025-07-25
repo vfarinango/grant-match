@@ -48,7 +48,7 @@ app.get('/health', async (req, res) => {
 app.get('/api/grants', async (req, res) => {
   try {
     // Query the 'grants' table
-    const result = await db.query('SELECT id, title, description, deadline, funding_amount, source, source_url, focus_areas, posted_date FROM grants');
+    const result = await pool.query('SELECT id, title, description, deadline, funding_amount, source, source_url, focus_areas, posted_date FROM grants');
 
     // Send the rows as a JSON response
     res.json(result.rows);
