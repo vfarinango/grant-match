@@ -44,6 +44,21 @@ app.get('/health', async (req, res) => {
   }
 });
 
+// New route to fetch grants data
+app.get('/api/grants', async (req, res) => {
+  try {
+    // Query the 'grants' table
+    const result = await db.query('SELECT id, title, description, deadline, funding_amount, source, source_url, focus_areas, posted_date FROM grants');
+
+    // Send the rows as a JSON response
+    res.json(result.rows);
+
+  } catch (err) {
+    console.error('Error fetching grants:', err);
+    res.status(500).json({ error: 'Internal server error', details: err.message });
+  }
+});
+
 
 // Start server using listen function
 app.listen(PORT, function (err) {
