@@ -1,0 +1,4 @@
+echo "backend/.env" >> .gitignore
+echo "frontend/.env" >> .gitignore
+echo "node_modules/" >> .gitignore
+echo ".DS_Store" >> .gitignore
