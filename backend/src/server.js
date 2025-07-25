@@ -16,17 +16,11 @@ app.use(express.json());
 // Allow frontend to connect
 app.use(cors());
 
+// Import routes file
+const grantsRoutes = require('./routes/grantsRoutes'); 
 
 
-// Basic testing route
-app.get('/', (req, res) => {
-  res.json({ 
-    message: 'GrantMatch API is running!',
-    timestamp: new Date().toISOString()
-  });
-});
-
-// Test Health check route
+// Test "Health" check route
 app.get('/health', async (req, res) => {
   try {
     const result = await pool.query('SELECT NOW()');
@@ -44,20 +38,8 @@ app.get('/health', async (req, res) => {
   }
 });
 
-// New route to fetch grants data
-app.get('/api/grants', async (req, res) => {
-  try {
-    // Query the 'grants' table
-    const result = await pool.query('SELECT id, title, description, deadline, funding_amount, source, source_url, focus_areas, posted_date FROM grants');
-
-    // Send the rows as a JSON response
-    res.json(result.rows);
-
-  } catch (err) {
-    console.error('Error fetching grants:', err);
-    res.status(500).json({ error: 'Internal server error', details: err.message });
-  }
-});
+// Use grants routes. All routes in grantsRoutes will be prefixed with /api/grants
+app.use('/api/grants', grantsRoutes);
 
 
 // Start server using listen function
