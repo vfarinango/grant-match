@@ -1,7 +1,9 @@
-const { Pool } =  require('pg');
-require('dotenv').config(); // For loading environment variables
+import { Pool, PoolConfig } from 'pg';  // const { Pool } =  require('pg');
+import dotenv from 'dotenv'; // require('dotenv').config(); // For loading environment variables
 
-let config;
+dotenv.config(); // Loading environment variables
+
+let config: PoolConfig; // let config;
 
 if (process.env.DATABASE_URL) {
     // If DATABASE_URL is set (yes, in production on Render)
@@ -18,7 +20,7 @@ if (process.env.DATABASE_URL) {
           host: process.env.PG_HOST,
           database: process.env.PG_DATABASE,
           password: process.env.PG_PASSWORD,
-          port: process.env.PG_PORT,
+          port: parseInt(process.env.PG_PORT || '5432', 10),
       };
 }
 
@@ -33,9 +35,9 @@ pool.on('connect', () => {
   console.log('Connected to PostgreSQL database');
 });
 
-pool.on('error', (err) => {
+pool.on('error', (err: Error) => {
   console.error('Database connection error:', err);
 });
 
-module.exports = pool;
+export default pool; // module.exports = pool;
 

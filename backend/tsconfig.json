@@ -1,0 +1,21 @@
+{
+  "compilerOptions": {
+    "target": "ES2020",         /* Specify ECMAScript target version for compiled JavaScript. */
+    "module": "CommonJS",      /* Specify module code generation: 'CommonJS', 'ESNext', etc. */
+    "outDir": "./dist",        /* Redirect output structure to the directory. */
+    "rootDir": "./src",        /* Specify the root directory of source files. */
+    "strict": true,            /* Enable all strict type-checking options. */
+    "esModuleInterop": true,   /* Enables emit interoperability between CommonJS and ES Modules. */
+    "allowSyntheticDefaultImports": true,
+    "skipLibCheck": true,      /* Skip type checking of declaration files. */
+    "forceConsistentCasingInFileNames": true, /* Ensure that casing of file names is consistent. */
+    "resolveJsonModule": true, /* Allow importing .json files */
+    "sourceMap": true,         /* Generates corresponding .map file. */
+    "baseUrl": ".",            /* Base directory to resolve non-absolute module names. */
+    "paths": {
+      "*": ["node_modules/*", "src/types/*"] /* Allows custom module paths */
+    }
+  },
+  "include": ["src/**/*.ts", "server.ts"], /* Specify pattern to include files. */
+  "exclude": ["node_modules", "dist"] /* Exclude files from compilation. */
+}

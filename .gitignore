@@ -10,5 +10,11 @@ backend/node_modules/ # Crucial if node_modules is inside backend
 # Environment variables
 backend/.env # Points specifically to your .env inside the backend folder
 
+
+# Compiled output directories
+dist/               # This will ignore dist/ in the root if it existed
+backend/dist/       # Add this line to explicitly ignore backend's dist folder
+frontend/dist/      # Add this line for your frontend's dist folder
+
 # OS files
 .DS_Store
