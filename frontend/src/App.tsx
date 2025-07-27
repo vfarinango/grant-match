@@ -1,35 +1,31 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+// import { useState } from 'react'
+// import axios from 'axios';
+// import { AgGridReact } from '@ag-grid-community/react'; 
+// import { ModuleRegistry } from '@ag-grid-community/core';
+// import { ClientSideRowModelModule } from '@ag-grid-community/client-side-row-model';
+// import 'ag-grid-community/styles/ag-grid.css'; 
+// import 'ag-grid-community/styles/ag-theme-quartz.css'; 
+import SearchBar from './components/SearchBar';
+import './App.css';
 
 function App() {
-  const [count, setCount] = useState(0)
+  const handleSearchSubmit = (query: string) => {
+    console.log("Search query received from SearchBar:", query);
+  };
 
   return (
     <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
+      <div className="container mx-auto p-4">
+          <h1 className="text-4xl font-bold text-center mb-6">GrantMatch App</h1>
+
+          {/* Render the SearchBar component */}
+          <SearchBar
+              onSearch={handleSearchSubmit}
+              // For now, isLoading is not explicitly passed, it will default to false in SearchBar
+          />
       </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
     </>
-  )
+  );
 }
 
-export default App
+export default App;
