@@ -4,6 +4,10 @@ const router = express.Router(); // Create a new router instance
 // Import database connection pool
 import pool from '../db/connection'; 
 
+// Import OpenAI
+import OpenAI from 'openai';
+const openai = new OpenAI();
+
 // Define an interface for the Grant data (for backend validation later)
 interface Grant {
   id: number;
@@ -15,7 +19,7 @@ interface Grant {
   source_url?: string;
   focus_areas?: string[]; 
   posted_date?: Date; 
-  embedding?: number[]; 
+  embedding: number[]; 
   created_at?: Date;
 }
 
@@ -57,16 +61,45 @@ router.get('/search', async (req: Request, res: Response) => {
     return res.status(400).json({ error: "Search query is required." });
   }
 
-  // --- Placeholder for AI search logic ---
-  // Steps for future implementation:
+  // --- Placeholder for AI search logic. steps: ---
   // 1. Generate embedding for userQuery using OpenAI API
-  // 2. Query DB using pgvector's cosine similarity operator
-  // 3. Return ranked results
+  try {
+    const queryEmbeddingResponse = await openai.embeddings.create({
+      model: "text-embedding-3-small",
+      input: userQuery,
+      encoding_format: "float",
+    });
 
-  // For now, returning a placeholder 
-  res.json({ message: `Search received for: "${userQuery}". AI logic not yet implemented.`, results: [] });
-  // --- End Placeholder ---
+    const userQueryEmbedding = queryEmbeddingResponse.data[0].embedding;
+
+    console.log("User query embedding generated successfully.")
+    // 2. Query DB using pgvector's cosine similarity operator
+
+    res.json({
+      message: `Search received for: "${userQuery}". AI logic not yet fully implemented.`,
+      queryEmbedding: userQueryEmbedding, // For debugging, remove  production
+      results: [] // This will be the actual grants later
+    });
+  } catch (error: any) {
+    console.error('Error in search endpoint:', error);
+    res.status(500).json({
+      error: 'Failed to process search query.',
+      details: error.message || 'Unknown error'
+    });
+  }
+  // 3. Return ranked results
 
 });
 
 export default router; 
+
+// Summarize grant feature backend: 
+// Update the grants model to include an optional summary.
+// Write a function that takes in a grant, sends a request to openAI and generates a summary. 
+// Write a patch request that runs that function and adds the summary to the grant.
+// https://github.com/Ada-C23/NPC-Generator/blob/solution-with-gemini/app/routes/character_routes.py
+// https://github.com/Ada-C23/pet_name_generator/blob/solution/app/routes/pet_routes.py
+// Validate helper functions (validate specific grant, make it a dict, use that dict to update the existing model)
+
+
+
