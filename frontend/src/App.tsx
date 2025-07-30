@@ -6,6 +6,7 @@ import { useState, useEffect } from 'react';
 // import 'ag-grid-community/styles/ag-grid.css'; 
 // import 'ag-grid-community/styles/ag-theme-quartz.css'; 
 import SearchBar from './components/SearchBar';
+import GrantsResults from './components/GrantsResults';
 import { getGrantsFromApi, searchGrantsFromApi } from './services/grantsApi'; 
 import './App.css';
 
@@ -27,11 +28,13 @@ function App() {
   const [grants, setGrants] = useState<Grant[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState<string>(''); // Track search query
 
 
   const fetchGrants = async (query?: string) => {
     setIsLoading(true);
     setError(null);
+    setSearchQuery(query || ''); // Update query state
 
     try{
       let fetchedData: Grant[];
@@ -68,17 +71,26 @@ function App() {
                 <p className="text-center mt-4 text-red-600">Error: {error}</p>
             )}
 
-            {!isLoading && !error && grants.length > 0 && (
+            {/* JSON results*/}
+
+            {/* {!isLoading && !error && grants.length > 0 && (
                 <div>
                     <h2 className="text-2xl font-semibold mt-8 mb-4">Available Grants:</h2>
                     <div style={{ height: '400px', overflowY: 'auto', border: '1px solid #ccc' }}>
                         <pre>{JSON.stringify(grants, null, 2)}</pre>
                     </div>
                 </div>
-            )}
+            )} */}
             {!isLoading && !error && grants.length === 0 && (
                 <p className="text-center mt-4 text-gray-500">No grants found. Database might be empty or your search yielded no results.</p>
             )}
+
+            <GrantsResults 
+              grants={grants}
+              loading={isLoading}
+              searchQuery={searchQuery}
+             />
+            
 
       </div>
     </>

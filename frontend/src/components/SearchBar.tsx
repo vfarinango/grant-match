@@ -22,7 +22,7 @@ const SearchBar = ({ onSearch, isLoading }: SearchBarProps) => {
 
     return (
         <div className="flex items-center gap-2 p-4">
-            {/* Mantine TextInput and Button here */}
+            {/* Mantine Components: TextInput and Button */}
             <TextInput
                 placeholder="'Education grants for nonprofits...'"
                 value={query}
