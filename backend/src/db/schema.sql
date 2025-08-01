@@ -1,4 +1,7 @@
+-- Drop tables if they exist to allow for clean recreation
+DROP TABLE IF EXISTS grant_embeddings;
 DROP TABLE IF EXISTS grants;
+
 
 CREATE TABLE grants (
   id SERIAL PRIMARY KEY,
@@ -10,9 +13,23 @@ CREATE TABLE grants (
   source_url TEXT,
   focus_areas TEXT[], -- Array for multiple focus areas
   posted_date DATE,
-  embedding VECTOR(1536), -- For OpenAI embeddings
   created_at TIMESTAMP DEFAULT NOW()
 );
+
+-- Table to store the embedding vectors, linked to the grants table
+CREATE TABLE grant_embeddings (
+  id SERIAL PRIMARY KEY,
+  grant_id INTEGER NOT NULL REFERENCES grants(id) ON DELETE CASCADE,
+  embedding_type VARCHAR(50) NOT NULL, -- 'full_text', 'title', 'description'
+  embedding VECTOR(1536) NOT NULL,
+  model_version VARCHAR(50) DEFAULT 'text-embedding-3-small',
+  created_at TIMESTAMP DEFAULT NOW(),
+  
+  -- Ensure one embedding per grant per type
+  UNIQUE(grant_id, embedding_type)
+);
+
+-- CREATE INDEX ON grant_embeddings USING ivfflat (embedding vector_cosine_ops);
 
 INSERT INTO grants (title, description, deadline, funding_amount, source, source_url, focus_areas, posted_date) VALUES
 ('Community Development Grant', 'Funding for local community projects focusing on education and infrastructure.', '2025-09-30', 150000.00, 'City Council', 'http://citygrants.org/cdg', ARRAY['education', 'infrastructure'], '2025-07-01'),

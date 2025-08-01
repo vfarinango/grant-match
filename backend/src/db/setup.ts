@@ -1,6 +1,6 @@
-const pool = require('./connection'); // Path to connection.js
-const fs = require('fs');
-const path = require('path');
+import pool from './connection'; 
+import fs from 'fs';
+import path from 'path';
 
 async function setupDatabase() {
     try {
@@ -25,5 +25,4 @@ async function setupDatabase() {
     }
 }
 
-// Run setup
 setupDatabase();

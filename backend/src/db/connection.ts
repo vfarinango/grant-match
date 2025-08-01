@@ -1,9 +1,9 @@
-import { Pool, PoolConfig } from 'pg';  // const { Pool } =  require('pg');
-import dotenv from 'dotenv'; // require('dotenv').config(); // For loading environment variables
+import { Pool, PoolConfig } from 'pg';  
+import dotenv from 'dotenv'; 
 
 dotenv.config(); // Loading environment variables
 
-let config: PoolConfig; // let config;
+let config: PoolConfig; 
 
 if (process.env.DATABASE_URL) {
     // If DATABASE_URL is set (yes, in production on Render)
@@ -39,5 +39,5 @@ pool.on('error', (err: Error) => {
   console.error('Database connection error:', err);
 });
 
-export default pool; // module.exports = pool;
+export default pool; 
 

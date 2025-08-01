@@ -9,7 +9,7 @@ import OpenAI from 'openai';
 const openai = new OpenAI();
 
 // Define an interface for the Grant data (for backend validation later)
-interface Grant {
+export interface Grant {
   id: number;
   title: string;
   description: string;
@@ -19,8 +19,17 @@ interface Grant {
   source_url?: string;
   focus_areas?: string[]; 
   posted_date?: Date; 
-  embedding: number[]; 
   created_at?: Date;
+}
+
+// embeddings interface
+export interface GrantEmbedding {
+  id: number;
+  grant_id: number;
+  embedding_type: 'full_text' | 'title' | 'description';
+  embedding: number[];
+  model_version: string;
+  created_at: Date;
 }
 
 
@@ -73,6 +82,20 @@ router.get('/search', async (req: Request, res: Response) => {
     const userQueryEmbedding = queryEmbeddingResponse.data[0].embedding;
 
     console.log("User query embedding generated successfully.")
+
+    const results = await pool.query(
+      `
+      SELECT
+          g.id, g.title, g.description, g.deadline, g.funding_amount,
+          g.source, g.source_url, g.focus_areas, g.posted_date,
+          1 - (ge.embedding <=> $1) AS similarity_score
+      FROM grants g
+      JOIN grant_embeddings ge ON g.id = ge.grant_id
+      ORDER BY similarity_score DESC
+      LIMIT 10
+      `,
+      [userQueryEmbedding]
+    );
     // 2. Query DB using pgvector's cosine similarity operator
 
     res.json({
