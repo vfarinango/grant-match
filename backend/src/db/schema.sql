@@ -29,7 +29,7 @@ CREATE TABLE grant_embeddings (
   UNIQUE(grant_id, embedding_type)
 );
 
--- CREATE INDEX ON grant_embeddings USING ivfflat (embedding vector_cosine_ops);
+CREATE INDEX ON grant_embeddings USING ivfflat (embedding vector_cosine_ops);
 
 INSERT INTO grants (title, description, deadline, funding_amount, source, source_url, focus_areas, posted_date) VALUES
 ('Community Development Grant', 'Funding for local community projects focusing on education and infrastructure.', '2025-09-30', 150000.00, 'City Council', 'http://citygrants.org/cdg', ARRAY['education', 'infrastructure'], '2025-07-01'),

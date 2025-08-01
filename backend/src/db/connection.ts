@@ -1,7 +1,16 @@
-import { Pool, PoolConfig } from 'pg';  
+import { Pool, PoolConfig, types } from 'pg';  
 import dotenv from 'dotenv'; 
 
 dotenv.config(); // Loading environment variables
+
+// Incoming convert: Parse vector strings back to JS arrays
+const PGVECTOR_OID = 3375;
+types.setTypeParser(PGVECTOR_OID as any, (val: string) => {
+  // val comes in as a string like "[1.2,3.4,5.6]"
+  // This will convert it back into a JS number array
+  return val.substring(1, val.length - 1).split(',').map(Number);
+});
+
 
 let config: PoolConfig; 
 

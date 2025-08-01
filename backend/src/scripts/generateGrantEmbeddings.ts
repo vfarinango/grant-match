@@ -43,7 +43,7 @@ async function generateAndStoreGrantEmbeddings() {
             return;
         }
 
-        console.log(`Found ${grantsToEmbed} grants to embed.`)
+        console.log(`Found ${grantsToEmbed.length} grants to embed.`); 
 
         // Loop through each grant and generate its embedding
         for (const grant of grantsToEmbed) {
@@ -54,22 +54,24 @@ async function generateAndStoreGrantEmbeddings() {
                 continue;
             }
 
+            console.log(`Processing grant ID ${grant.id}: "${grant.title}"`); // progress logging
+
             try {
                 const embedding = await getEmbedding(grantTextToEmbed);
 
                 // INSERT into the new table with all required fields
                 await pool.query(
-                    `INSERT INTO grant_embeddings (grant_id, embedding_type, embedding) VALUES ($1, $2, $3)`,
-                    [grant.id, 'full_text', embedding] // 'full_text' is a good value for embedding_type here
+                    `INSERT INTO grant_embeddings (grant_id, embedding_type, embedding, model_version) VALUES ($1, $2, $3::vector, $4)`,
+                    [grant.id, 'full_text', `[${embedding.join(',')}]`, 'text-embedding-3-small'] 
                 );
-                console.log(`Successfully embedded and inserted grant ID: ${grant.id}`);
+                console.log(`✅ Successfully embedded and inserted grant ID: ${grant.id}`);
             } catch (innerError: any) {
-                console.error(`Failed to embed or insert for grant ID ${grant.id}:`, innerError.message);
+                console.error(`❌ Failed to embed or insert for grant ID ${grant.id}:`, innerError.message);
                 // Continue to the next grant even if one fails
             }
         } 
 
-        console.log('Grant embedding generation complete.');
+        console.log('🎉 Grant embedding generation complete.');
     } catch (error: any) {
         console.error('An error occurred during the embedding process:', error.message);
     } finally {
@@ -79,13 +81,13 @@ async function generateAndStoreGrantEmbeddings() {
     }  
 }
 
-
-// // Execute the main function
+// Execute the main function
 generateAndStoreGrantEmbeddings();
 
-// DO NOT RUN YET --- URGENT REFACTOR:
-// set up db with migrations folder (just in case)
-// Using current db:
-    // update grants table to remove embedding VECTOR(1536)
-    // create new vector-embeddings table in db for vector embeddings
-    // set up grant id as FK to vector-embeddings table
+
+// // DO NOT RUN YET --- URGENT REFACTOR:
+// // set up db with migrations folder (just in case)
+// // Using current db:
+//     // update grants table to remove embedding VECTOR(1536)
+//     // create new vector-embeddings table in db for vector embeddings
+//     // set up grant id as FK to vector-embeddings table
