@@ -87,18 +87,20 @@ router.get('/search', async (req: Request, res: Response) => {
 
     const vectorString = `[${userQueryEmbedding.join(',')}]`; // Outgoing convert: embedding JS array to proper vector format string
 
-    // Debug: Check what's in your database first
-    const debugCount = await pool.query(`
-      SELECT 
-        COUNT(*) as total_grants,
-        COUNT(ge.id) as grants_with_embeddings
-      FROM grants g
-      LEFT JOIN grant_embeddings ge ON g.id = ge.grant_id AND ge.embedding_type = 'full_text'
-    `);
+    // Debug: Check what's in database first
+    // const debugCount = await pool.query(`
+    //   SELECT 
+    //     COUNT(*) as total_grants,
+    //     COUNT(ge.id) as grants_with_embeddings
+    //   FROM grants g
+    //   LEFT JOIN grant_embeddings ge ON g.id = ge.grant_id AND ge.embedding_type = 'full_text'
+    // `);
     
-    console.log("Database debug info:", debugCount.rows[0]);
+    // console.log("Database debug info:", debugCount.rows[0]);
 
-    // 2. Query DB using pgvector's cosine similarity operator
+    // 2. Query DB using pgvector's cosine similarity operator & relevance threshold
+    const RELEVANCE_THRESHOLD = 0.7; 
+
     const result = await pool.query<{
         id: number;
         title: string;
@@ -122,27 +124,60 @@ router.get('/search', async (req: Request, res: Response) => {
       ORDER BY similarity_score DESC
       LIMIT 10
       `,
-      [vectorString] // Pass the properly formatted vector string     
+      [vectorString] // Pass the formatted vector string
     );
 
-    console.log("Query executed successfully.");
-    console.log("Number of results found:", result.rows.length);
+    // console.log("Query executed successfully.");
+    // console.log("Number of results found:", result.rows.length);
 
-    if (result.rows.length > 0) {
-      console.log("Top result similarity score:", result.rows[0].similarity_score);
-      console.log("Top result title:", result.rows[0].title);
+    // if (result.rows.length > 0) {
+    //   console.log("Top result similarity score:", result.rows[0].similarity_score);
+    //   console.log("Top result title:", result.rows[0].title);
+    // }
+
+    // 3. Enhanced response with messaging
+    let message: string;
+    let status: 'excellent' | 'good' | 'fair' | 'no_results';
+
+    if (result.rows.length === 0) {
+      message = `No relevant grants found for "${userQuery}". Try broader search terms.`;
+      status = 'no_results';
+    } else {
+      const topScore = result.rows[0].similarity_score;
+      if (topScore >= 0.8) {
+        message = `Found ${result.rows.length} highly relevant grants for "${userQuery}".`;
+        status = 'excellent';
+      } else if (topScore >= 0.7) {
+        message = `Found ${result.rows.length} relevant grants for "${userQuery}".`;
+        status = 'good';
+      } else {
+        message = `Found ${result.rows.length} potentially relevant grants for "${userQuery}".`;
+        status = 'fair';
+      }
     }
 
     // 3. Return ranked results 
+    // res.json({
+    //   message: `Search received for: "${userQuery}". AI logic implemented.`,
+    //   results: result.rows,
+    //   debug: {
+    //     totalGrants: debugCount.rows[0].total_grants,
+    //     grantsWithEmbeddings: debugCount.rows[0].grants_with_embeddings,
+    //     resultsFound: result.rows.length
+    //   }
+    // });
     res.json({
-      message: `Search received for: "${userQuery}". AI logic implemented.`,
+      message,
+      status,
+      query: userQuery,
       results: result.rows,
-      debug: {
-        totalGrants: debugCount.rows[0].total_grants,
-        grantsWithEmbeddings: debugCount.rows[0].grants_with_embeddings,
-        resultsFound: result.rows.length
+      metadata: {
+        totalResults: result.rows.length,
+        topSimilarityScore: result.rows.length > 0 ? result.rows[0].similarity_score : null,
+        relevanceThreshold: RELEVANCE_THRESHOLD
       }
     });
+
   } catch (error: any) {
     console.error('Error in search endpoint:', error);
     res.status(500).json({
