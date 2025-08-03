@@ -1,4 +1,5 @@
 import axios from 'axios';
+const BACKEND_URL = import.meta.env.VITE_APP_BACKEND_URL;
 
 interface Grant {
     id: number;
@@ -12,42 +13,66 @@ interface Grant {
     posted_date?: Date; 
     embedding?: number[]; 
     created_at?: Date;
+    similarity_score?: number;
+}
+
+interface SearchResponse {
+    message: string;
+    status: 'excellent' | 'good' | 'fair' | 'no_results';
+    query: string;
+    results: Grant[];
+    metadata: {
+        totalResults: number;
+        topSimilarityScore: number | null;
+        relevanceThreshold: number;
+    };
 }
 
 // Function to get all grants from backend API
 const getGrantsFromApi = async (): Promise<Grant[]> => {
-    const backendUrl = import.meta.env.VITE_APP_BACKEND_URL;
-    if (!backendUrl) {
+    if (!BACKEND_URL) {
         throw new Error("VITE_APP_BACKEND_URL is not defined in frontend/.env or Netlify.");
     }
 
-    const apiUrl = `${backendUrl}/api/grants`;
-    const response = await axios.get<Grant[]>(apiUrl); // Ensure expected type
-    return response.data; // Return the raw data array
+    console.log('Calling API:', `${BACKEND_URL}/api/grants`); // Debug log
+
+    try {
+        const apiUrl = `${BACKEND_URL}/api/grants`;
+        const response = await axios.get<Grant[]>(apiUrl); // Ensure expected type
+        console.log('Full API Response:', response); // Debug the full response
+        console.log('Response Status:', response.status); // Debug status
+        console.log('Response Data:', response.data); // Debug data
+        console.log('Response Data Type:', typeof response.data); // Debug data type
+        console.log('Response Data Length:', response.data?.length); // Debug length
+        return response.data; // Return the raw data array
+
+    } catch (error) {
+        console.error('Error in getGrantsFromApi:', error);
+        throw error;    
+    }
 };
 
 // Function to search grants from backend API
-const searchGrantsFromApi = async (query: string): Promise<Grant[]> => {
-    const backendUrl = import.meta.env.VITE_APP_BACKEND_URL;
-    if (!backendUrl) {
+const searchGrantsFromApi = async (query: string): Promise<SearchResponse> => {
+    if (!BACKEND_URL) {
         throw new Error("VITE_APP_BACKEND_URL is not defined in frontend/.env or Netlify.");
     }
 
-    const apiUrl = `${backendUrl}/api/grants/search?query=${encodeURIComponent(query)}`;
-    const response = await axios.get<Grant[]>(apiUrl); // Ensure expected type
-    // The search endpoint currently returns { message, results }. We need results.
-    // If your backend's search endpoint returns { message: string, results: Grant[] }, you'd adjust here:
-    // return response.data.results;
-    // For now, based on its current placeholder:
-    if (Array.isArray(response.data)) { // If it directly returns the array (like /api/grants)
+    console.log('Calling search API:', `${BACKEND_URL}/api/grants/search?query=${encodeURIComponent(query)}`); // Debug log
+
+    try {
+        const apiUrl = `${BACKEND_URL}/api/grants/search?query=${encodeURIComponent(query)}`;
+        const response = await axios.get<SearchResponse>(apiUrl); // Ensure expected type
+        console.log('Full Search Response:', response); // Debug the full response
+        console.log('Search Response Status:', response.status); // Debug status
+        console.log('Search Response Data:', response.data); // Debug data
+        console.log('Search Results Array:', response.data?.results); // Debug results array        
         return response.data;
-    } else if (typeof response.data === 'object' && response.data !== null && 'results' in response.data && Array.isArray(response.data.results)) {
-        return response.data.results as Grant[]; // Type assertion for safety
-    } else {
-        // Handle cases where the placeholder returns non-array or unexpected structure
-        console.warn('Unexpected response structure from search API:', response.data);
-        return [];
+    } catch (error) {
+        console.error('Error in searchGrantsFromApi call: ', error);
+        throw error;
     }
 };
 
 export { getGrantsFromApi, searchGrantsFromApi };
+export type { Grant, SearchResponse };

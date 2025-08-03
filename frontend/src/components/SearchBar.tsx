@@ -24,7 +24,7 @@ const SearchBar = ({ onSearch, isLoading }: SearchBarProps) => {
         <div className="flex items-center gap-2 p-4">
             {/* Mantine Components: TextInput and Button */}
             <TextInput
-                placeholder="'Education grants for nonprofits...'"
+                placeholder="'Grants for environmental protection in urban areas...'"
                 value={query}
                 onChange={(event) => setQuery(event.currentTarget.value)}
                 onKeyDown={handleKeyDown}

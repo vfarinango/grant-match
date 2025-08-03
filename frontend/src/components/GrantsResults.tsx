@@ -1,7 +1,14 @@
 import { Text, Stack } from '@mantine/core';
-import Grant from './Grant';
+import type { Grant } from "../services/grantsApi";
+import GrantComponent from './Grant';
 
-const GrantsResults = ({ grants, loading, searchQuery }) => {
+interface GrantsResultsProps {
+  grants: Grant[];
+  loading: boolean;
+  searchQuery: string;
+}
+
+const GrantsResults = ({ grants, loading, searchQuery }: GrantsResultsProps) => {
 
   if (loading) {
     return (
@@ -17,6 +24,11 @@ const GrantsResults = ({ grants, loading, searchQuery }) => {
           <Text size="lg" c="dimmed">
             {searchQuery ? `No grants found for "${searchQuery}"` : 'No grants available'}
           </Text>
+          {searchQuery && (
+            <Text size="sm" c="dimmed" className="mt-2">
+              Try different keywords or broader search terms
+            </Text>        
+          )}
         </div>
     );
   }
@@ -31,7 +43,7 @@ const GrantsResults = ({ grants, loading, searchQuery }) => {
         </Text>  
 
         {grants.map((grant) => (
-          <Grant 
+          <GrantComponent 
             key={grant.id} 
             id={grant.id}
             title={grant.title}
