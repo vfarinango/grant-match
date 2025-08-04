@@ -82,10 +82,9 @@ router.get('/search', async (req: Request, res: Response) => {
     });
 
     const userQueryEmbedding = queryEmbeddingResponse.data[0].embedding;
-
-    console.log("User query embedding generated successfully.")
-
     const vectorString = `[${userQueryEmbedding.join(',')}]`; // Outgoing convert: embedding JS array to proper vector format string
+    
+    console.log("User query embedding generated successfully.")
 
     // Debug: Check what's in database first
     // const debugCount = await pool.query(`
@@ -189,6 +188,59 @@ router.get('/search', async (req: Request, res: Response) => {
 });
 
 export default router; 
+
+// GET similar grants of a specific grant id
+router.get('/:id/similar', async (req: Request, res: Response) => { 
+  try {
+    const grantId = req.params.id;
+    // Use existing embedding to find similar grants
+    const embeddingQuery = `
+    SELECT embedding
+    FROM grant_embeddings
+    WHERE grant_id = $1
+    `;
+    
+    const embeddingResult = await pool.query(embeddingQuery, [grantId])
+
+    if (embeddingResult.rows.length === 0) {
+      return res.status(404).json({ error: "Grant not found" });
+    }
+    
+    const targetEmbedding = embeddingResult.rows[0].embedding;
+
+    // Return similar grants array  
+    const similarQuery = `
+      SELECT grants.id, grants.title, grants.description, grants.deadline,
+        grants.funding_amount, grants.source, grants.source_url, 
+        grants.focus_areas, grants.posted_date,
+        (grant_embeddings.embedding <=> $1::vector) AS distance
+      FROM grants, grant_embeddings
+      WHERE grants.id = grant_embeddings.grant_id 
+      AND grants.id != $2
+      ORDER BY grant_embeddings.embedding <=> $1::vector
+      LIMIT 5
+    `;
+
+    const similarResult = await pool.query(similarQuery, [targetEmbedding, grantId]);
+
+    const similarGrants = similarResult.rows;
+
+    res.json({
+      message: `Found ${similarGrants.length} similar grants`,
+      results: similarGrants,
+      metadata: {
+          totalResults: similarGrants.length,
+          basedOnGrantId: grantId
+      }
+    });
+  } catch (error: any) {
+    console.error('Error finding similar grants:', error);
+    res.status(500).json({
+      error: 'Failed to find similar grants',
+      details: error.message 
+    });
+  }
+});
 
 // Summarize grant feature backend: 
 // Update the grants model to include an optional summary.
