@@ -1,14 +1,45 @@
 import { Text, Stack } from '@mantine/core';
-import type { Grant } from "../services/grantsApi";
+import type { Grant, SimilarGrant } from "../services/grantsApi";
 import GrantComponent from './Grant';
 
 interface GrantsResultsProps {
-  grants: Grant[];
+  grants: (Grant | SimilarGrant)[];
   loading: boolean;
-  searchQuery: string;
+  view: 'all' | 'search' | 'similar';
+  searchQuery?: string;
+  onSearchSimilar: (grantId: number, grantTitle: string) => Promise<void>;
 }
 
-const GrantsResults = ({ grants, loading, searchQuery }: GrantsResultsProps) => {
+const GrantsResults = ({ grants, loading, view, searchQuery, onSearchSimilar }: GrantsResultsProps) => {
+
+  const renderHeader = () => {
+    const countMessage = `${grants.length} grant${grants.length !== 1 ? 's' : ''}`;
+
+    switch (view) {
+      case 'all':
+        return `${countMessage} available`;
+      case 'search':
+        return `${countMessage} found for your search`;
+      case 'similar':
+        return `${countMessage} similar grants found`;
+      default:
+        return countMessage;
+    }
+  };
+
+  const renderEmptyState = () => {
+    let message = 'No grants available';
+    if (view === 'search' && searchQuery) {
+        message = `No grants found for "${searchQuery}"`;
+    } else if (view === 'similar') {
+        message = `No similar grants found.`;
+    }
+    return (
+        <div className="text-center py-12">
+            <Text size="lg" c="dimmed">{message}</Text>
+        </div>
+    );
+  };
 
   if (loading) {
     return (
@@ -19,18 +50,7 @@ const GrantsResults = ({ grants, loading, searchQuery }: GrantsResultsProps) => 
   }
 
   if (!grants || grants.length === 0 ) {
-      return (
-        <div className="text-center py-12">
-          <Text size="lg" c="dimmed">
-            {searchQuery ? `No grants found for "${searchQuery}"` : 'No grants available'}
-          </Text>
-          {searchQuery && (
-            <Text size="sm" c="dimmed" className="mt-2">
-              Try different keywords or broader search terms
-            </Text>        
-          )}
-        </div>
-    );
+    return renderEmptyState();
   }
   
 
@@ -38,22 +58,15 @@ const GrantsResults = ({ grants, loading, searchQuery }: GrantsResultsProps) => 
   return (
       <Stack gap="md" className="mt-6">
         <Text size="sm" c="dimmed">
-          {grants.length} grant{grants.length !== 1 ? 's' : ''} found
-          {searchQuery && ` for "${searchQuery}"`}
+          {renderHeader()}
         </Text>  
 
         {grants.map((grant) => (
           <GrantComponent 
             key={grant.id} 
-            id={grant.id}
-            title={grant.title}
-            description={grant.description}
-            deadline={grant.deadline}
-            funding_amount={grant.funding_amount}
-            source={grant.source}
-            source_url={grant.source_url}
-            focus_areas={grant.focus_areas}
-            posted_date={grant.posted_date}
+            grant={grant}
+            onSearchSimilar={onSearchSimilar}
+            view={view}
           />
         ))}
       </Stack>

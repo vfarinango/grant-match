@@ -5,15 +5,14 @@ interface Grant {
     id: number;
     title: string;
     description: string;
-    deadline?: Date; 
+    deadline?: Date | string; 
     funding_amount?: number;  
     source?: string;
     source_url?: string;
     focus_areas?: string[]; 
     posted_date?: Date; 
     embedding?: number[]; 
-    created_at?: Date;
-    similarity_score?: number;
+    created_at?: Date | string;
 }
 
 interface SearchResponse {
@@ -27,6 +26,25 @@ interface SearchResponse {
         relevanceThreshold: number;
     };
 }
+
+interface SimilarGrant extends Grant {
+    similarity_score: number;
+};
+
+interface SimilarSearchResponse {
+    message: string;
+    status: 'excellent' | 'good' | 'fair' | 'no_results';
+    baseGrant: {
+        id: number;
+        title: string;
+    };
+    results: SimilarGrant[];
+    metadata: {
+        totalResults: number;
+        basedOnGrantId: number;
+        topSimilarityScore: number | null;
+    }; 
+};
 
 // Function to get all grants from backend API
 const getGrantsFromApi = async (): Promise<Grant[]> => {
@@ -58,8 +76,6 @@ const searchGrantsFromApi = async (query: string): Promise<SearchResponse> => {
         throw new Error("VITE_APP_BACKEND_URL is not defined in frontend/.env or Netlify.");
     }
 
-    console.log('Calling search API:', `${BACKEND_URL}/api/grants/search?query=${encodeURIComponent(query)}`); // Debug log
-
     try {
         const apiUrl = `${BACKEND_URL}/api/grants/search?query=${encodeURIComponent(query)}`;
         const response = await axios.get<SearchResponse>(apiUrl); // Ensure expected type
@@ -74,5 +90,25 @@ const searchGrantsFromApi = async (query: string): Promise<SearchResponse> => {
     }
 };
 
-export { getGrantsFromApi, searchGrantsFromApi };
-export type { Grant, SearchResponse };
+// Function to search similar grants 
+const searchSimilarGrantsFromApi = async (grantId: number): Promise<SimilarSearchResponse> => {
+    if (!BACKEND_URL) {
+        throw new Error("VITE_APP_BACKEND_URL is not defined in frontend/.env or Netlify.");
+    }
+
+    try {
+        const apiUrl = `${BACKEND_URL}/api/grants/${grantId}/similar`;
+        const response = await axios.get<SimilarSearchResponse>(apiUrl);
+        console.log('Full Search Response:', response); // Debug the full response
+        console.log('Search Response Status:', response.status); // Debug status
+        console.log('Search Response Data:', response.data); // Debug data
+        console.log('Search Results Array:', response.data?.results); // Debug results array        
+        return response.data;
+    } catch (error) {
+        console.error('Error searching similar grants:', error);
+        throw error;
+    }
+};
+
+export { getGrantsFromApi, searchGrantsFromApi, searchSimilarGrantsFromApi };
+export type { Grant, SearchResponse, SimilarGrant, SimilarSearchResponse };

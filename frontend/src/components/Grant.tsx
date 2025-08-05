@@ -1,122 +1,137 @@
 import { Card, Text, Badge, Button, Group, Stack, Anchor } from '@mantine/core';
-// import { IconCalendar, IconCurrencyDollar, IconBuilding } from '@tabler/icons-react';
-// import type { Grant } from "../services/grantsApi";
+import { IconSearch} from '@tabler/icons-react'; //IconCalendar, IconCurrencyDollar, IconBuilding,
+import type { Grant, SimilarGrant } from "../services/grantsApi";
 
-interface GrantProps {
-    id: number;
-    title: string;
-    description: string;
-    deadline?: Date | string;
-    funding_amount?: number;
-    source?: string;
-    source_url?: string;
-    focus_areas?: string[];
-    posted_date?: Date | string;
+
+const formatCurrency = (amount: number | undefined): string => {
+    if (!amount) return 'Amount not specified';
+    return new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: 'USD',
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0,
+    }).format(amount);
+};
+
+const formatDate = (dateString: Date | string | undefined): string => {
+    if (!dateString) return 'Date not specified';
+    return new Date(dateString).toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric'
+    });
+};
+
+
+const isSimilarGrant = (grant: Grant | SimilarGrant): grant is SimilarGrant => {
+    return (grant as SimilarGrant).similarity_score !== undefined;
 }
 
-const GrantComponent = ( {
-    title,
-    description,
-    deadline,
-    funding_amount, 
-    source,
-    source_url,
-    focus_areas,
-    posted_date
-    }: GrantProps) => {
+interface GrantProps {
+    grant: Grant | SimilarGrant;
+    onSearchSimilar: (grantId: number, grantTitle: string) => void;
+    view: 'all' | 'search' | 'similar';
+}
 
-        const formatCurrency = (amount: number | undefined): string => {
-            if (!amount) return 'Amount not specified';
-            return new Intl.NumberFormat('en-US', {
-                style: 'currency',
-                currency: 'USD',
-                minimumFractionDigits: 0,
-                maximumFractionDigits: 0,
-            }).format(amount);
-        };
+const GrantComponent = ({ grant, onSearchSimilar, view }: GrantProps) => {
+    const handleSimilarClick = () => {
+        if (grant.id && grant.title) {
+            onSearchSimilar(grant.id, grant.title);
+        }
+    };
 
-        const formatDate = (dateString: Date | string | undefined): string => {
-            if (!dateString) return 'Date not specified';
-            return new Date(dateString).toLocaleDateString('en-US', {
-                year: 'numeric',
-                month: 'short',
-                day: 'numeric'
-            });
-        };
+    return (
+    <Card shadow="sm" padding="lg" radius="md" withBorder>
+        <Stack gap="sm">
+            <Group justify="space-between" align="flex-start">
+                <div className="flex-1">
+                    <Text fw={600} size="lg" className="mb-2">
+                        {grant.title}
+                    </Text>
+                    <Text size="sm" c="dimmed" lineClamp={3}>
+                        {grant.description}
+                    </Text>
+                </div>
 
-        return (
-        <Card shadow="sm" padding="lg" radius="md" withBorder>
-            <Stack gap="sm">
-                <Group justify="space-between" align="flex-start">
-                    <div className="flex-1">
-                        <Text fw={600} size="lg" className="mb-2">
-                            {title}
-                        </Text>
-                        <Text size="sm" c="dimmed" lineClamp={3}>
-                            {description}
-                        </Text>
-                    </div>
+                <div className="text-right min-w-fit ml-4">
+                    <Text size="xs" c="dimmed">Posted</Text>
+                    <Text size="sm">{formatDate(grant.posted_date)}</Text>
+                </div>
+            </Group>
 
-                    <div className="text-right min-w-fit ml-4">
-                        <Text size="xs" c="dimmed">Posted</Text>
-                        <Text size="sm">{formatDate(posted_date)}</Text>
-                    </div>
-                </Group>
+            <Group gap="lg" className="mt-3">
+                <div>
+                    <Text size="xs" c="dimmed">Funding Amount</Text>
+                    <Text size="sm" fw={500}>
+                        {formatCurrency(grant.funding_amount)}
+                    </Text>
+                </div>
+                
+                <div>
+                    <Text size="xs" c="dimmed">Deadline</Text>
+                    <Text size="sm" fw={500}>
+                        {formatDate(grant.deadline)}
+                    </Text>
+                </div>
 
-                <Group gap="lg" className="mt-3">
+                {grant.source && (
                     <div>
-                        <Text size="xs" c="dimmed">Funding Amount</Text>
-                        <Text size="sm" fw={500}>
-                            {formatCurrency(funding_amount)}
-                        </Text>
+                        <Text size="xs" c="dimmed">Source</Text>
+                        <Badge variant="light" size="sm" className="mt-1">
+                            {grant.source}
+                        </Badge>
                     </div>
-                    
-                    <div>
-                        <Text size="xs" c="dimmed">Deadline</Text>
-                        <Text size="sm" fw={500}>
-                            {formatDate(deadline)}
-                        </Text>
-                    </div>
-
-                    {source && (
-                        <div>
-                            <Text size="xs" c="dimmed">Source</Text>
-                            <Badge variant="light" size="sm" className="mt-1">
-                                {source}
-                            </Badge>
-                        </div>
-                    )}
-                </Group>
-
-                {focus_areas && focus_areas.length > 0 && (
-                    <Group gap="xs" className="mt-2">
-                        <Text size="xs" c="dimmed">Focus Areas:</Text>
-                        {focus_areas.map((area, index) => (
-                            <Badge key={index} variant="outline" size="xs">
-                                {area}
-                            </Badge>
-                        ))}
-                    </Group>
                 )}
 
-                <Group justify="space-between" className="mt-4 pt-3 border-t border-gray-100">
-                    <Group gap="sm">
-                        <Button variant="filled" size="sm">
-                            Summarize
-                        </Button>
-                        <Button variant="outline" size="sm">
+                {/* New: Conditionally display relevance score for search results */}
+                {isSimilarGrant(grant) && (
+                    <div>
+                        <Text size="xs" c="dimmed">Relevance</Text>
+                        <Badge color="cyan" variant="light" size="sm" className="mt-1">
+                            {grant.similarity_score.toFixed(2)}
+                        </Badge>
+                    </div>
+                )}
+            </Group>
+
+            {grant.focus_areas && grant.focus_areas.length > 0 && (
+                <Group gap="xs" className="mt-2">
+                    <Text size="xs" c="dimmed">Focus Areas:</Text>
+                    {grant.focus_areas.map((area, index) => (
+                        <Badge key={index} variant="outline" size="xs">
+                            {area}
+                        </Badge>
+                    ))}
+                </Group>
+            )}
+
+            <Group justify="space-between" className="mt-4 pt-3 border-t border-gray-100">
+                <Group gap="sm">
+                    <Button variant="filled" size="sm">
+                        Summarize
+                    </Button>
+                    
+                    {/* New: Conditionally display "Search Similar" button */}
+                    {view !== 'similar' && (
+                        <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={handleSimilarClick}
+                            leftSection={<IconSearch size={14} />}
+                        >
                             Search Similar
                         </Button>
-                    </Group>
-
-                    {source_url && (
-                        <Anchor href={source_url} target="_blank" size="sm">
-                            Source →
-                        </Anchor>
                     )}
                 </Group>
-            </Stack>
-        </Card>
+
+                {grant.source_url && (
+                    <Anchor href={grant.source_url} target="_blank" size="sm">
+                        Source →
+                    </Anchor>
+                )}
+            </Group>
+        </Stack>
+    </Card>
     );
 };
 
