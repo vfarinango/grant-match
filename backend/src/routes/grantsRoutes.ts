@@ -70,14 +70,13 @@ router.get('/', async (req: Request, res: Response) => {
 });
 
 
-// GET grants by search (where AI search logic will go)
+// GET grants by search (Regular Search)
 router.get('/search', async (req: Request, res: Response) => {
   const userQuery: string | undefined = req.query.query as string | undefined;
   if (!userQuery) {
     return res.status(400).json({ error: "Search query is required." });
   }
 
-  // --- Placeholder for AI search logic. Steps: ---
   try {
     // 1. Generate embedding for userQuery using OpenAI API
     const queryEmbeddingResponse = await openai.embeddings.create({
@@ -90,17 +89,6 @@ router.get('/search', async (req: Request, res: Response) => {
     const vectorString = `[${userQueryEmbedding.join(',')}]`; // Outgoing convert: embedding JS array to proper vector format string
     
     console.log("User query embedding generated successfully.")
-
-    // Debug: Check what's in database first
-    // const debugCount = await pool.query(`
-    //   SELECT 
-    //     COUNT(*) as total_grants,
-    //     COUNT(ge.id) as grants_with_embeddings
-    //   FROM grants g
-    //   LEFT JOIN grant_embeddings ge ON g.id = ge.grant_id AND ge.embedding_type = 'full_text'
-    // `);
-    
-    // console.log("Database debug info:", debugCount.rows[0]);
 
     // 2. Query DB using pgvector's cosine similarity operator & relevance threshold
     const RELEVANCE_THRESHOLD = 0.7; 
@@ -131,14 +119,6 @@ router.get('/search', async (req: Request, res: Response) => {
       [vectorString] // Pass the formatted vector string
     );
 
-    // console.log("Query executed successfully.");
-    // console.log("Number of results found:", result.rows.length);
-
-    // if (result.rows.length > 0) {
-    //   console.log("Top result similarity score:", result.rows[0].similarity_score);
-    //   console.log("Top result title:", result.rows[0].title);
-    // }
-
     // 3. Enhanced response with messaging
     let message: string;
     let status: 'excellent' | 'good' | 'fair' | 'no_results';
@@ -160,16 +140,6 @@ router.get('/search', async (req: Request, res: Response) => {
       }
     }
 
-    // 3. Return ranked results 
-    // res.json({
-    //   message: `Search received for: "${userQuery}". AI logic implemented.`,
-    //   results: result.rows,
-    //   debug: {
-    //     totalGrants: debugCount.rows[0].total_grants,
-    //     grantsWithEmbeddings: debugCount.rows[0].grants_with_embeddings,
-    //     resultsFound: result.rows.length
-    //   }
-    // });
     res.json({
       message,
       status,
@@ -194,7 +164,7 @@ router.get('/search', async (req: Request, res: Response) => {
 
 
 
-// GET similar grants of a specific grant id
+// GET similar grants of a specific grant id (Similar Search)
 router.get('/:id/similar', async (req: Request, res: Response) => { 
   try {
     const grantId = parseInt(req.params.id, 10);
@@ -213,6 +183,10 @@ router.get('/:id/similar', async (req: Request, res: Response) => {
 
     const baseGrant = grantCheck.rows[0];
 
+    // Define a threshold for similar grants
+    const SIMILARITY_THRESHOLD = 0.4; // This is the distance threshold, lower is more similar
+    const MAX_SIMILAR_RESULTS = 3; // Limit the number of results for clarity
+
     // Find similar grants
     const similarQuery = `
       SELECT 
@@ -223,11 +197,11 @@ router.get('/:id/similar', async (req: Request, res: Response) => {
       FROM grants g
       JOIN grant_embeddings ge1 ON g.id = ge1.grant_id
       JOIN grant_embeddings ge2 ON ge2.grant_id = $1
-      WHERE g.id != $1 
-        AND ge1.embedding_type = 'full_text'
-        AND ge2.embedding_type = 'full_text'
+      WHERE 
+        g.id != $1 
+        AND (ge1.embedding <=> ge2.embedding) < ${SIMILARITY_THRESHOLD}
       ORDER BY similarity_score DESC
-      LIMIT 10
+      LIMIT ${MAX_SIMILAR_RESULTS}
     `;
 
     const similarResult = await pool.query(similarQuery, [grantId]);
@@ -267,7 +241,7 @@ router.get('/:id/similar', async (req: Request, res: Response) => {
       }
     }
 
-    // CONSISTENT: Return wrapped response like your search endpoint
+    // Return wrapped response like search endpoint
     res.json({
       message,
       status,
