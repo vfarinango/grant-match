@@ -34,6 +34,11 @@ export interface GrantEmbedding {
   created_at: Date;
 }
 
+// Specific interface for similar search results
+export interface SimilarGrant extends Grant {
+  similarity_score: number; 
+}
+
 
 // Test "Health" check route
 router.get('/health', async (req: Request, res: Response) => {
@@ -187,52 +192,97 @@ router.get('/search', async (req: Request, res: Response) => {
 
 });
 
-export default router; 
+
 
 // GET similar grants of a specific grant id
 router.get('/:id/similar', async (req: Request, res: Response) => { 
   try {
-    const grantId = req.params.id;
-    // Use existing embedding to find similar grants
-    const embeddingQuery = `
-    SELECT embedding
-    FROM grant_embeddings
-    WHERE grant_id = $1
-    `;
-    
-    const embeddingResult = await pool.query(embeddingQuery, [grantId])
+    const grantId = parseInt(req.params.id, 10);
 
-    if (embeddingResult.rows.length === 0) {
+    // Input validation for the ID
+    if (isNaN(grantId)) {
+      return res.status(400).json({ error: "Invalid grant ID format." });
+    }
+
+    // Check if grant exists first
+    const grantCheck = await pool.query('SELECT id, title FROM grants WHERE id = $1', [grantId]);
+    
+    if (grantCheck.rows.length === 0) {
       return res.status(404).json({ error: "Grant not found" });
     }
-    
-    const targetEmbedding = embeddingResult.rows[0].embedding;
 
-    // Return similar grants array  
+    const baseGrant = grantCheck.rows[0];
+
+    // Find similar grants
     const similarQuery = `
-      SELECT grants.id, grants.title, grants.description, grants.deadline,
-        grants.funding_amount, grants.source, grants.source_url, 
-        grants.focus_areas, grants.posted_date,
-        (grant_embeddings.embedding <=> $1::vector) AS distance
-      FROM grants, grant_embeddings
-      WHERE grants.id = grant_embeddings.grant_id 
-      AND grants.id != $2
-      ORDER BY grant_embeddings.embedding <=> $1::vector
-      LIMIT 5
+      SELECT 
+        g.id, g.title, g.description, g.deadline,
+        g.funding_amount, g.source, g.source_url, 
+        g.focus_areas, g.posted_date,
+        1 - (ge1.embedding <=> ge2.embedding) AS similarity_score
+      FROM grants g
+      JOIN grant_embeddings ge1 ON g.id = ge1.grant_id
+      JOIN grant_embeddings ge2 ON ge2.grant_id = $1
+      WHERE g.id != $1 
+        AND ge1.embedding_type = 'full_text'
+        AND ge2.embedding_type = 'full_text'
+      ORDER BY similarity_score DESC
+      LIMIT 10
     `;
 
-    const similarResult = await pool.query(similarQuery, [targetEmbedding, grantId]);
+    const similarResult = await pool.query(similarQuery, [grantId]);
 
-    const similarGrants = similarResult.rows;
+    // Transform results to match SimilarGrant interface
+    const similarGrants: SimilarGrant[] = similarResult.rows.map(row => ({
+      id: row.id,
+      title: row.title,
+      description: row.description,
+      deadline: row.deadline,
+      funding_amount: row.funding_amount,
+      source: row.source,
+      source_url: row.source_url,
+      focus_areas: row.focus_areas,
+      posted_date: row.posted_date,
+      similarity_score: row.similarity_score
+    }));
 
+    // Enhanced messaging based on results
+    let message: string;
+    let status: 'excellent' | 'good' | 'fair' | 'no_results';
+
+    if (similarGrants.length === 0) {
+      message = `No similar grants found for "${baseGrant.title}".`;
+      status = 'no_results';
+    } else {
+      const topScore = similarGrants[0].similarity_score;
+      if (topScore >= 0.8) {
+        message = `Found ${similarGrants.length} highly similar grants to "${baseGrant.title}".`;
+        status = 'excellent';
+      } else if (topScore >= 0.6) {
+        message = `Found ${similarGrants.length} similar grants to "${baseGrant.title}".`;
+        status = 'good';
+      } else {
+        message = `Found ${similarGrants.length} potentially similar grants to "${baseGrant.title}".`;
+        status = 'fair';
+      }
+    }
+
+    // CONSISTENT: Return wrapped response like your search endpoint
     res.json({
-      message: `Found ${similarGrants.length} similar grants`,
+      message,
+      status,
+      baseGrant: {
+        id: baseGrant.id,
+        title: baseGrant.title
+      },
       results: similarGrants,
       metadata: {
-          totalResults: similarGrants.length,
-          basedOnGrantId: grantId
+        totalResults: similarGrants.length,
+        basedOnGrantId: grantId,
+        topSimilarityScore: similarGrants.length > 0 ? similarGrants[0].similarity_score : null
       }
     });
+    
   } catch (error: any) {
     console.error('Error finding similar grants:', error);
     res.status(500).json({
@@ -241,6 +291,8 @@ router.get('/:id/similar', async (req: Request, res: Response) => {
     });
   }
 });
+
+export default router; 
 
 // Summarize grant feature backend: 
 // Update the grants model to include an optional summary.

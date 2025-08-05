@@ -15,7 +15,7 @@ types.setTypeParser(PGVECTOR_OID as any, (val: string) => {
 let config: PoolConfig; 
 
 if (process.env.DATABASE_URL) {
-    // If DATABASE_URL is set (yes, in production on Render)
+    // If DATABASE_URL is set 
     config = {
         connectionString: process.env.DATABASE_URL,
         ssl: {

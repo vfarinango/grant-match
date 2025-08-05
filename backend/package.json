@@ -6,8 +6,13 @@
   "scripts": {
     "build": "tsc",
     "start": "node dist/server.js",
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "ts-node-dev --respawn --transpile-only src/server.ts"
+    "test": "PG_DATABASE=grant_match_test jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
+    "db:migrate": "npx node-pg-migrate up",
+    "db:migrate:down": "npx node-pg-migrate down",
+    "db:create": "npx node-pg-migrate create"
   },
   "keywords": [],
   "author": "",
@@ -21,12 +26,26 @@
     "openai": "^5.10.2",
     "pg": "^8.16.3"
   },
+  "pg-migrate": {
+    "databaseUrl": {
+        "ENV": "DATABASE_URL"
+    },
+    "dir": "migrations",
+    "schema": "public",
+    "migrationsTable": "pgmigrations"
+  },
   "devDependencies": {
     "@types/cors": "^2.8.19",
     "@types/dotenv": "^6.1.1",
     "@types/express": "^5.0.3",
+    "@types/jest": "^30.0.0",
     "@types/node": "^24.1.0",
     "@types/pg": "^8.15.4",
+    "@types/supertest": "^6.0.3",
+    "jest": "^30.0.5",
+    "node-pg-migrate": "^8.0.3",
+    "supertest": "^7.1.4",
+    "ts-jest": "^29.4.1",
     "ts-node": "^10.9.2",
     "ts-node-dev": "^2.0.0",
     "typescript": "^5.8.3"

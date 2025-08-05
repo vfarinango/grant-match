@@ -16,12 +16,8 @@ async function setupDatabase() {
 
         const schema = fs.readFileSync(schemaPath, 'utf8');
 
-        // --- CORRECTED: Split the schema into individual queries and execute them ---
-        const queries = schema
-            .split(';')
-            .map(q => q.trim())
-            .filter(q => q.length > 0)
-            .filter(q => !q.startsWith('--')); // Remove comment-only lines
+        // Split schema into individual queries and execute them ---
+        const queries = schema.split(';').filter(q => q.trim().length > 0);
 
         console.log(`Found ${queries.length} SQL commands to execute`);
         
