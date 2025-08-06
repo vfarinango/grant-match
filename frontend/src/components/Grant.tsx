@@ -29,14 +29,14 @@ const isSimilarGrant = (grant: Grant | SimilarGrant): grant is SimilarGrant => {
 
 interface GrantProps {
     grant: Grant | SimilarGrant;
-    onSearchSimilar: (grantId: number, grantTitle: string) => void;
+    onSearchSimilarGrants: (grantId: number, grantTitle: string) => void;
     view: 'all' | 'search' | 'similar';
 }
 
-const GrantComponent = ({ grant, onSearchSimilar, view }: GrantProps) => {
+const GrantComponent = ({ grant, onSearchSimilarGrants, view }: GrantProps) => {
     const handleSimilarClick = () => {
         if (grant.id && grant.title) {
-            onSearchSimilar(grant.id, grant.title);
+            onSearchSimilarGrants(grant.id, grant.title);
         }
     };
 
@@ -126,7 +126,7 @@ const GrantComponent = ({ grant, onSearchSimilar, view }: GrantProps) => {
 
                 {grant.source_url && (
                     <Anchor href={grant.source_url} target="_blank" size="sm">
-                        Source →
+                        Apply →
                     </Anchor>
                 )}
             </Group>

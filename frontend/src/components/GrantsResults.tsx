@@ -7,10 +7,10 @@ interface GrantsResultsProps {
   loading: boolean;
   view: 'all' | 'search' | 'similar';
   searchQuery?: string;
-  onSearchSimilar: (grantId: number, grantTitle: string) => Promise<void>;
+  onSearchSimilarGrants: (grantId: number, grantTitle: string) => Promise<void>;
 }
 
-const GrantsResults = ({ grants, loading, view, searchQuery, onSearchSimilar }: GrantsResultsProps) => {
+const GrantsResults = ({ grants, loading, view, searchQuery, onSearchSimilarGrants }: GrantsResultsProps) => {
 
   const renderHeader = () => {
     const countMessage = `${grants.length} grant${grants.length !== 1 ? 's' : ''}`;
@@ -65,7 +65,7 @@ const GrantsResults = ({ grants, loading, view, searchQuery, onSearchSimilar }: 
           <GrantComponent 
             key={grant.id} 
             grant={grant}
-            onSearchSimilar={onSearchSimilar}
+            onSearchSimilarGrants={onSearchSimilarGrants}
             view={view}
           />
         ))}

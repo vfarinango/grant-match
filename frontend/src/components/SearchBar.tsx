@@ -10,13 +10,13 @@ interface SearchBarProps {
 const SearchBar = ({ onSearch, isLoading }: SearchBarProps) => {
     const [query, setQuery] = useState<string>("");
 
-    const handleSearchSubmit = () => {
+    const onSearchSubmit = () => {
         onSearch(query);
     };
 
     const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
         if (event.key === 'Enter') {
-            handleSearchSubmit();
+            onSearchSubmit();
         }
     };
 
@@ -32,7 +32,7 @@ const SearchBar = ({ onSearch, isLoading }: SearchBarProps) => {
                 className="flex-grow"
             />
             <Button
-                onClick={handleSearchSubmit} 
+                onClick={onSearchSubmit} 
                 disabled={isLoading}
                 loading={isLoading}
             >

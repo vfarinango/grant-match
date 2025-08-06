@@ -4,38 +4,38 @@
 // import { ClientSideRowModelModule } from '@ag-grid-community/client-side-row-model';
 // import 'ag-grid-community/styles/ag-grid.css'; 
 // import 'ag-grid-community/styles/ag-theme-quartz.css'; 
+
+
+import { MantineProvider } from '@mantine/core';
+import { theme } from './theme';
+import InitialSearch from './components/InitialSearch';
+import Dashboard from './components/Dashboard';
+// import './App.css';
+
 import { useState, useEffect } from 'react';
-import { Text, Alert } from '@mantine/core';
-import { IconAlertCircle } from '@tabler/icons-react';
-
-import SearchBar from './components/SearchBar';
-import GrantsResults from './components/GrantsResults';
 import { getGrantsFromApi, searchGrantsFromApi, searchSimilarGrantsFromApi} from './services/grantsApi'; 
-import type { Grant, SimilarGrant } from './services/grantsApi'; // SearchResponse,  SimilarSearchResponse
-import './App.css';
+import type { Grant, SimilarGrant } from './services/grantsApi'; 
 
-// Use a union type for the grants state to handle both types
 type DisplayedGrant = Grant | SimilarGrant;
 
 function App() {
+  const [view, setView] = useState<'initial' | 'dashboard'>('initial');
   const [grants, setGrants] = useState<DisplayedGrant[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState<string>(''); // Track search query
+  const [currentView, setCurrentView] = useState<'all' | 'search' | 'similar'>('all'); // Similar search specific state
+  const [baseGrant, setBaseGrant] = useState<{ id: number; title: string } | null>(null); // Similar search specific state:
+
   
-  // Similar search specific state:
-  const [currentView, setCurrentView] = useState<'all' | 'search' | 'similar'>('all');
-  const [baseGrant, setBaseGrant] = useState<{ id: number; title: string } | null>(null);
-
-  // const isSimilarGrant = (grant: Grant | SimilarGrant): grant is SimilarGrant => {
-  //   return 'similarity_score' in grant && typeof grant.similarity_score === 'number';
-  // };
-
-  const handleSearchSubmit = (query: string) => {
+  // API handlers
+  const onSearchSubmit = (query: string) => {
+    // When a search is submitted, switch to the dashboard view
+    setView('dashboard');
     fetchGrants(query);
   };
 
-  const handleFetchAllGrants = () => {
+  const onFetchAllGrants = () => {
     fetchGrants();
   };
 
@@ -47,25 +47,25 @@ function App() {
     setBaseGrant(null); // set base grant when doing regular search
 
     try {
-      if (query) {
+    if (query) {
         const searchResponse = await searchGrantsFromApi(query);
         setGrants(searchResponse.results);
         console.log("Search results: ", searchResponse);
-      } else {
+    } else {
         const fetchedData = await getGrantsFromApi();
         setGrants(fetchedData);
         console.log("All grants: ", fetchedData);
-      } 
+    } 
     } catch (err) {
-      console.error("API call failed:", err);
-      setError("An unknown error occurred while fetching grants.");
-      setGrants([]);
+    console.error("API call failed:", err);
+    setError("An unknown error occurred while fetching grants.");
+    setGrants([]);
     } finally {
-      setIsLoading(false);
+    setIsLoading(false);
     }
-  };
+};
 
-  const handleSearchSimilarGrants = async (grantId: number, grantTitle: string) => {
+const onSearchSimilarGrants = async (grantId: number, grantTitle: string) => {
     setIsLoading(true);
     setError(null);
     setCurrentView('similar');
@@ -80,75 +80,41 @@ function App() {
     }
 
     try {
-      const similarSearchResponse = await searchSimilarGrantsFromApi(grantId);
-      setGrants(similarSearchResponse.results);
-      console.log("Similar grants: ", similarSearchResponse); // debug log
+        const similarSearchResponse = await searchSimilarGrantsFromApi(grantId);
+        setGrants(similarSearchResponse.results);
+        console.log("Similar grants: ", similarSearchResponse); // debug log
     } catch (err) {
-      console.error("Similar search failed:", err);
-      setError("An error occurred while finding similar grants.");
-      setGrants([]);  
+        console.error("Similar search failed:", err);
+        setError("An error occurred while finding similar grants.");
+        setGrants([]);  
     } finally {
-      setIsLoading(false);
+        setIsLoading(false);
     }
-  };
-
-
+};
 
   // Initial load of all grants
   useEffect(() => {
-    handleFetchAllGrants();
+      onFetchAllGrants();
   }, []);
 
-
   return (
-    <>
-      <div className="container mx-auto p-4">
-          <h1 className="text-4xl font-bold text-center mb-6">GrantMatch App</h1>
-
-          <SearchBar 
-            onSearch={handleSearchSubmit} 
-            isLoading={isLoading} 
-          />
-
-          {currentView === 'similar' && baseGrant && (
-            <Text size="lg" className="mt-4 text-center">
-              Showing grants similar to: <span className="font-bold">{baseGrant.title}</span>
-            </Text>
-          )}
-
-          {error && (
-            <Alert 
-              icon={<IconAlertCircle size={16} />} 
-              title="Error" 
-              color="red" 
-              className="my-4"
-            >
-              {error}
-            </Alert>
-          )}
-
-          {!error && (
-            <GrantsResults 
+    <MantineProvider theme={theme}>
+      {view === 'initial' ? (
+          <InitialSearch onSearchSubmit={onSearchSubmit} isLoading={isLoading} />
+      ) : (
+          <Dashboard
               grants={grants}
-              loading={isLoading}
-              onSearchSimilar={handleSearchSimilarGrants}
-              // onSummarize={handleSummarize}
-              view={currentView}
+              isLoading={isLoading}
+              error={error}
               searchQuery={searchQuery}
-            />
-          )}
-
-          {!isLoading && !error && grants && grants.length === 0 && searchQuery === '' && (
-            <div className="text-center my-8 text-gray-500">
-              <p className="text-lg mb-2">Welcome to GrantMatch!</p>
-              <p>Search for grants using natural language.</p>
-              <p className="text-sm mt-2 italic">
-                Example: "Grants for environmental education in urban areas"
-              </p>
-            </div>              
-          )}
-      </div>
-    </>
+              currentView={currentView}
+              baseGrant={baseGrant}
+              onSearchSubmit={onSearchSubmit}
+              onFetchAllGrants={onFetchAllGrants}
+              onSearchSimilarGrants={onSearchSimilarGrants}
+          />
+      )}
+    </MantineProvider>
   );
 }
 
