@@ -32,13 +32,6 @@ const SearchBar = ({ onSearch, isLoading, compact = false }: SearchBarProps) => 
     };
 
     return (
-        // <Box 
-        //     style={{ 
-        //         display: 'flex', 
-        //         alignItems: 'center' 
-        //     }} 
-        //     p="md"
-        // >
         <Group 
             wrap="nowrap" 
             style={{ 

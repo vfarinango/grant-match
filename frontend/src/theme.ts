@@ -52,6 +52,44 @@ export const theme = createTheme({
         lg: '0px 8px 16px rgba(0, 0, 0, 0.1)',
     },
     components: {
+        Modal: {
+            defaultProps: {
+                centered: true,
+                radius: 'md',
+                transitionProps: { transition: 'fade', duration: 200 },
+                overlayProps: { backgroundOpacity: 0.55, blur: 3 },
+            },
+            styles: (theme: MantineTheme) => ({
+                root: {
+                    position: 'fixed',
+                    zIndex: 1000,
+                },
+                inner: {
+                    position: 'fixed',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                },
+                content: {
+                    maxHeight: '90vh',
+                    maxWidth: '90vw',
+                    boxShadow: theme.shadows.xl,
+                    border: `1px solid ${theme.colors.gray[2]}`,
+                },
+                header: {
+                    backgroundColor: theme.colors.gray[0],
+                    borderBottom: `1px solid ${theme.colors.gray[2]}`,
+                    padding: theme.spacing.lg,
+                },
+                body: {
+                    padding: theme.spacing.lg,
+                },
+            }),
+        },
         Button: {
             defaultProps: {
                 radius: 'md',

@@ -1,4 +1,4 @@
-/// Dashboard.tsx code:
+// import { Fragment } from 'react';
 import { AppShell, Burger, Group, Text, Title, NavLink, Box, Alert } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
 import { IconSearch, IconStar, IconAlertCircle } from '@tabler/icons-react';
@@ -7,8 +7,6 @@ import { IconSearch, IconStar, IconAlertCircle } from '@tabler/icons-react';
 import SearchBar from './SearchBar';
 import GrantsResults from './GrantsResults';
 import GrantsFilters from './GrantsFilters';
-
-// import { useState, useEffect } from 'react';
 import type { Grant, SimilarGrant } from '../services/grantsApi';
 
 interface DashboardProps {
@@ -17,7 +15,6 @@ interface DashboardProps {
     error: string | null;
     searchQuery: string;
     currentView: 'all' | 'search' | 'similar' | 'initial';
-    baseGrant: { id: number; title: string } | null;
     onSearchSubmit: (query: string) => void;
     onFetchAllGrants: () => void;
     onSearchSimilarGrants: (grantId: number, grantTitle: string) => Promise<void>;
@@ -25,7 +22,7 @@ interface DashboardProps {
 }
 
 const Dashboard = ({
-    grants, isLoading, error, searchQuery, currentView, baseGrant,
+    grants, isLoading, error, searchQuery, currentView,
     onSearchSubmit, onFetchAllGrants, onSearchSimilarGrants, onResetToInitial
 }: DashboardProps) => {
     const [opened, { toggle }] = useDisclosure();
@@ -55,12 +52,6 @@ const Dashboard = ({
             <AppShell.Navbar p="md">
                 {/* Navigation Links */}
                 <Box mb="md">
-                    {/* <NavLink 
-                        label="Home"
-                        leftSection={<IconHome2 size={16}/>}
-                        active={false}
-                        onClick={onResetToInitial}
-                    /> */}
                     <NavLink 
                         label="Search"
                         leftSection={<IconSearch size={16}/>}
@@ -82,30 +73,14 @@ const Dashboard = ({
             </AppShell.Navbar>
 
             <AppShell.Main>
-                {/* Mobile search bar */}
-                <Box hiddenFrom="sm" mb="md" px="sm">
-                    <SearchBar 
-                        onSearch={onSearchSubmit} 
-                        isLoading={isLoading} 
-                    />
-                </Box>
-
-                {/* Desktop search bar */}
-                <Box visibleFrom="sm" mb="md" px="sm">
+                {/* Search bar */}
+                <Box mb="md" px="sm">
                     <SearchBar 
                         onSearch={onSearchSubmit} 
                         isLoading={isLoading} 
                     />
                 </Box>
                 
-                {currentView === 'similar' && baseGrant && (
-                    <Alert mb="md" variant="light" color="primary-blue" mx="sm">
-                        <Text size="sm" c="text-primary.0">
-                            Showing grants similar to: <Text span fw={500} c="primary-blue.3">{baseGrant.title}</Text>
-                        </Text>
-                    </Alert>
-                )}
-
                 {currentView === 'search' && searchQuery && (
                     <Alert mb="md" variant="light" color="primary-blue" mx="sm">
                         <Text size="sm" c="text-primary.0">

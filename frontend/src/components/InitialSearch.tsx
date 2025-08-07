@@ -29,7 +29,7 @@ const InitialSearch = ({ onSearchSubmit, isLoading }: InitialSearchProps) => {
                 flexDirection: 'column',
                 alignItems: 'center',
                 justifyContent: 'center',
-                minHeight: 'calc(100vh - 60px)'
+                minHeight: 'calc(100vh - 50px)'
             }}
             p="md"
         >

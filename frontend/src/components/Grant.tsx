@@ -1,7 +1,7 @@
 import { Card, Text, Badge, Button, Group, Stack, Anchor, Box, Divider} from '@mantine/core';
 import { IconSearch} from '@tabler/icons-react'; //IconCalendar, IconCurrencyDollar, IconBuilding,
 import type { Grant, SimilarGrant } from "../services/grantsApi";
-
+import React from 'react'; // Import React for the synthetic event type
 
 const formatCurrency = (amount: number | undefined): string => {
     if (!amount) return 'Amount not specified';
@@ -34,7 +34,10 @@ interface GrantProps {
 }
 
 const GrantComponent = ({ grant, onSearchSimilarGrants, view }: GrantProps) => {
-    const handleSimilarClick = () => {
+    const handleSimilarClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+        event.stopPropagation();
+        console.log('Similar click handler called', { grantId: grant.id, grantTitle: grant.title });
+        
         if (grant.id && grant.title) {
             onSearchSimilarGrants(grant.id, grant.title);
         }
@@ -115,7 +118,7 @@ const GrantComponent = ({ grant, onSearchSimilarGrants, view }: GrantProps) => {
                             </Button>
                             
                             {/* Conditionally display "Search Similar" button */}
-                            {view !== 'similar' && (
+                            {view != 'similar' && (
                                 <Button 
                                     variant="outline" 
                                     size="sm"

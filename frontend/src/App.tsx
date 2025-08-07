@@ -5,6 +5,8 @@
 // import 'ag-grid-community/styles/ag-grid.css'; 
 // import 'ag-grid-community/styles/ag-theme-quartz.css'; 
 
+// import '@mantine/core/styles.css';
+
 import { useState } from 'react';
 import { MantineProvider } from '@mantine/core';
 import { getGrantsFromApi, searchGrantsFromApi, searchSimilarGrantsFromApi} from './services/grantsApi'; 
@@ -13,7 +15,8 @@ import type { Grant, SimilarGrant } from './services/grantsApi';
 import { theme } from './theme';
 import Dashboard from './components/Dashboard';
 import InitialSearch from './components/InitialSearch';
-import './App.css';
+import SimilarGrantsModal from './components/SimilarGrantsModal';
+// import './App.css';
 
 
 type DisplayedGrant = Grant | SimilarGrant;
@@ -23,9 +26,13 @@ function App() {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState<string>(''); // Track search query
-  const [currentView, setCurrentView] = useState<'all' | 'search' | 'similar' | 'initial'>('initial'); // Similar search specific state
+  const [currentView, setCurrentView] = useState<'all' | 'search' |'initial'>('initial'); 
+  
+  // Similar grants modal state
+  const [similarGrants, setSimilarGrants] = useState<SimilarGrant[]>([]);
+  const [similarModalOpened, setSimilarModalOpened] = useState<boolean>(false);
+  const [similarLoading, setSimilarLoading] = useState<boolean>(false);
   const [baseGrant, setBaseGrant] = useState<{ id: number; title: string } | null>(null); // Similar search specific state:
-
   
   // API handlers
   const onSearchSubmit = (query: string) => {
@@ -62,32 +69,33 @@ function App() {
     }
 };
 
-const onSearchSimilarGrants = async (grantId: number, grantTitle: string) => {
-    setIsLoading(true);
-    setError(null);
-    setCurrentView('similar');
-    setSearchQuery('');
+  const onSearchSimilarGrants = async (grantId: number, grantTitle: string) => {
+      setSimilarLoading(true);
+      setSimilarModalOpened(true);
+      setBaseGrant({ id: grantId, title: grantTitle });
+      setError(null);
+      setSimilarGrants([]); 
 
-    // Find the grant title from the currently displayed grants
-    const grant = grants.find(g => g.id === grantId);
-    if (grant) {
-        setBaseGrant({ id: grantId, title: grantTitle });
-    } else {
-        setBaseGrant(null);
-    }
+      try {
+          const similarSearchResponse = await searchSimilarGrantsFromApi(grantId);
+          setSimilarGrants(similarSearchResponse.results);
+          console.log("Similar grants: ", similarSearchResponse); // debug log
+      } catch (err) {
+          console.error("Similar search failed:", err);
+          setError("An error occurred while finding similar grants.");
+          setSimilarGrants([]);  
+      } finally {
+          setSimilarLoading(false);
+      }
+  };
 
-    try {
-        const similarSearchResponse = await searchSimilarGrantsFromApi(grantId);
-        setGrants(similarSearchResponse.results);
-        console.log("Similar grants: ", similarSearchResponse); // debug log
-    } catch (err) {
-        console.error("Similar search failed:", err);
-        setError("An error occurred while finding similar grants.");
-        setGrants([]);  
-    } finally {
-        setIsLoading(false);
-    }
-};
+  const onCloseSimilarModal = () => {
+    setSimilarModalOpened(false);
+    setSimilarGrants([]);
+    setBaseGrant(null);
+  };
+
+
 
   // Reset to initial view (for "Home" navigation)
   const onResetToInitial = () => {
@@ -100,25 +108,35 @@ const onSearchSimilarGrants = async (grantId: number, grantTitle: string) => {
 
   return (
     <MantineProvider theme={theme}>
-      {currentView === 'initial' ? (
-          <InitialSearch 
-            onSearchSubmit={onSearchSubmit} 
-            isLoading={isLoading} 
-          />
-      ) : (
-          <Dashboard
-              grants={grants}
-              isLoading={isLoading}
-              error={error}
-              searchQuery={searchQuery}
-              currentView={currentView}
-              baseGrant={baseGrant}
-              onSearchSubmit={onSearchSubmit}
-              onFetchAllGrants={onFetchAllGrants}
-              onSearchSimilarGrants={onSearchSimilarGrants}
-              onResetToInitial={onResetToInitial}
-          />
-      )}
+        {currentView === 'initial' ? (
+            <InitialSearch 
+              onSearchSubmit={onSearchSubmit} 
+              isLoading={isLoading} 
+            />
+        ) : (
+            <Dashboard
+                grants={grants}
+                isLoading={isLoading}
+                error={error}
+                searchQuery={searchQuery}
+                currentView={currentView}
+                onSearchSubmit={onSearchSubmit}
+                onFetchAllGrants={onFetchAllGrants}
+                onSearchSimilarGrants={onSearchSimilarGrants}
+                onResetToInitial={onResetToInitial}
+            />
+
+        )}
+
+        {/* Similar Grants Modal */}
+        <SimilarGrantsModal
+          opened={similarModalOpened}
+          onClose={onCloseSimilarModal}
+          similarGrants={similarGrants}
+          loading={similarLoading}
+          baseGrant={baseGrant}
+          onSearchSimilarGrants={onSearchSimilarGrants}
+        />
     </MantineProvider>
   );
 }
