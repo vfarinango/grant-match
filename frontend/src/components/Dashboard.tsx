@@ -1,3 +1,4 @@
+/// Dashboard.tsx code:
 import { AppShell, Burger, Group, Text, Title, NavLink, Box, Alert } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
 import { IconHome2, IconSearch, IconStar, IconAlertCircle } from '@tabler/icons-react';
@@ -15,16 +16,17 @@ interface DashboardProps {
     isLoading: boolean;
     error: string | null;
     searchQuery: string;
-    currentView: 'all' | 'search' | 'similar';
+    currentView: 'all' | 'search' | 'similar' | 'initial';
     baseGrant: { id: number; title: string } | null;
     onSearchSubmit: (query: string) => void;
     onFetchAllGrants: () => void;
     onSearchSimilarGrants: (grantId: number, grantTitle: string) => Promise<void>;
+    onResetToInitial: () => void;
 }
 
 const Dashboard = ({
     grants, isLoading, error, searchQuery, currentView, baseGrant,
-    onSearchSubmit, onFetchAllGrants, onSearchSimilarGrants
+    onSearchSubmit, onFetchAllGrants, onSearchSimilarGrants, onResetToInitial
 }: DashboardProps) => {
     const [opened, { toggle }] = useDisclosure();
 
@@ -38,86 +40,117 @@ const Dashboard = ({
                 <Group h="100%" px="md" justify="space-between">
                     <Group>
                         <Burger opened={opened} onClick={toggle} hiddenFrom="sm" size="sm" />
-                        <Title order={2}>GrantMatch</Title>
+                        <Title 
+                            order={2} 
+                            c="text-primary.0"
+                            style={{ cursor: 'pointer' }}
+                            onClick={onResetToInitial}
+                        >
+                            GrantMatch
+                        </Title>
                     </Group>
-
-                    <Box hiddenFrom="sm">
-                        <NavLink 
-                            label="Home" 
-                            leftSection={<IconHome2 size={16}/>} 
-                            active={currentView === 'all'}
-                            onClick={onFetchAllGrants} 
-                        />
-                        <NavLink 
-                            label="Saved" 
-                            leftSection={<IconStar size={16}/>} 
-                        />
-                    </Box>
                 </Group>
             </AppShell.Header>
 
             <AppShell.Navbar p="md">
-                <Text fw={500} mb="xs">Filters</Text>
-                <GrantsFilters />
-                
-                <NavLink 
-                    label="All Grants"
-                    leftSection={<IconHome2 size={16}/>}
-                    active={currentView === 'all'}
-                    onClick={() => onFetchAllGrants()} 
-                />
-                <NavLink 
-                    label="Search" 
-                    leftSection={<IconSearch size={16}/>} 
-                    active={currentView === 'search'} 
-                />
+                {/* Navigation Links */}
+                <Box mb="md">
+                    <NavLink 
+                        label="Home"
+                        leftSection={<IconHome2 size={16}/>}
+                        active={false}
+                        onClick={onResetToInitial}
+                    />
+                    <NavLink 
+                        label="Search"
+                        leftSection={<IconSearch size={16}/>}
+                        active={currentView === 'all'}
+                        onClick={onFetchAllGrants}
+                    />
+                    <NavLink 
+                        label="Saved" 
+                        leftSection={<IconStar size={16}/>}
+                        disabled={true}
+                    />
+                </Box>
+
+                {/* Filters Section */}
+                <Box>
+                    <Text fw={500} mb="xs" size="sm" c="text-secondary.0">Filters</Text>
+                    <GrantsFilters />
+                </Box>
             </AppShell.Navbar>
 
             <AppShell.Main>
-                {/* Existing conditional rendering logic goes here */}
-                <div className="flex gap-2 mb-4">
+                {/* Mobile search bar */}
+                <Box hiddenFrom="sm" mb="md">
                     <SearchBar 
                         onSearch={onSearchSubmit} 
                         isLoading={isLoading} 
                     />
-                </div>
+                </Box>
+
+                {/* Desktop search bar */}
+                <Box visibleFrom="sm" mb="md">
+                    <SearchBar 
+                        onSearch={onSearchSubmit} 
+                        isLoading={isLoading} 
+                    />
+                </Box>
                 
                 {currentView === 'similar' && baseGrant && (
-                    <Text size="lg" className="mt-4 text-center">
-                    Showing grants similar to: <span className="font-bold">{baseGrant.title}</span>
-                    </Text>
-                )}
-
-                {error && (
-                    <Alert 
-                    icon={<IconAlertCircle size={16} />} 
-                    title="Error" 
-                    color="red" 
-                    className="my-4"
-                    >
-                    {error}
+                    <Alert mb="md" variant="light" color="primary-blue">
+                        <Text size="sm" c="text-primary.0">
+                            Showing grants similar to: <Text span fw={500} c="primary-blue.3">{baseGrant.title}</Text>
+                        </Text>
                     </Alert>
                 )}
 
-                {!error && (
+                {currentView === 'search' && searchQuery && (
+                    <Alert mb="md" variant="light" color="primary-blue">
+                        <Text size="sm" c="text-primary.0">
+                            Search results for: <Text span fw={500} c="primary-blue.3">"{searchQuery}"</Text>
+                        </Text>
+                    </Alert>
+                )}
+
+                {/* Error handling */}
+                {error && (
+                    <Alert 
+                        icon={<IconAlertCircle size={16} />} 
+                        title="Error" 
+                        color="red" 
+                        mb="md"
+                    >
+                        {error}
+                    </Alert>
+                )}
+
+                {/* Main content */}
+                {!error && currentView !== 'initial' && (
                     <GrantsResults 
-                    grants={grants}
-                    loading={isLoading}
-                    view={currentView}
-                    searchQuery={searchQuery}
-                    onSearchSimilarGrants={onSearchSimilarGrants}
-                    // onSummarize={handleSummarize}
+                        grants={grants}
+                        loading={isLoading}
+                        view={currentView as 'all' | 'search' | 'similar'}
+                        searchQuery={searchQuery}
+                        onSearchSimilarGrants={onSearchSimilarGrants}
                     />
                 )}
 
-                {!isLoading && !error && grants && grants.length === 0 && searchQuery === '' && (
-                    <div className="text-center my-8 text-gray-500">
-                    <p className="text-lg mb-2">Welcome to GrantMatch!</p>
-                    <p>Search for grants using natural language.</p>
-                    <p className="text-sm mt-2 italic">
-                        Example: "Grants for environmental education in urban areas"
-                    </p>
-                    </div>              
+                {/* Empty state for all grants view */}
+                {!isLoading && !error && grants && grants.length === 0 && currentView === 'all' && (
+                    <Box ta="center" my="xl" c="text-secondary.0">
+                        <Text size="lg" mb="xs" c="text-primary.0" fw={600}>No grants found</Text>
+                        <Text size="sm">Try adjusting your filters or search criteria.</Text>
+                    </Box>              
+                )}
+
+                {/* Empty state for search */}
+                {!isLoading && !error && grants && grants.length === 0 && currentView === 'search' && (
+                    <Box ta="center" my="xl" c="text-secondary.0">
+                        <Text size="lg" mb="xs" c="text-primary.0" fw={600}>No results found</Text>
+                        <Text size="sm">Try a different search query or browse all grants.</Text>
+                    </Box>              
                 )}
             </AppShell.Main>
         </AppShell>
@@ -125,3 +158,6 @@ const Dashboard = ({
 };
 
 export default Dashboard;
+
+
+

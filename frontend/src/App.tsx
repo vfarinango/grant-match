@@ -5,33 +5,30 @@
 // import 'ag-grid-community/styles/ag-grid.css'; 
 // import 'ag-grid-community/styles/ag-theme-quartz.css'; 
 
-
+import { useState } from 'react';
 import { MantineProvider } from '@mantine/core';
-import { theme } from './theme';
-import InitialSearch from './components/InitialSearch';
-import Dashboard from './components/Dashboard';
-// import './App.css';
-
-import { useState, useEffect } from 'react';
 import { getGrantsFromApi, searchGrantsFromApi, searchSimilarGrantsFromApi} from './services/grantsApi'; 
 import type { Grant, SimilarGrant } from './services/grantsApi'; 
+
+import { theme } from './theme';
+import Dashboard from './components/Dashboard';
+import InitialSearch from './components/InitialSearch';
+import './App.css';
+
 
 type DisplayedGrant = Grant | SimilarGrant;
 
 function App() {
-  const [view, setView] = useState<'initial' | 'dashboard'>('initial');
   const [grants, setGrants] = useState<DisplayedGrant[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState<string>(''); // Track search query
-  const [currentView, setCurrentView] = useState<'all' | 'search' | 'similar'>('all'); // Similar search specific state
+  const [currentView, setCurrentView] = useState<'all' | 'search' | 'similar' | 'initial'>('initial'); // Similar search specific state
   const [baseGrant, setBaseGrant] = useState<{ id: number; title: string } | null>(null); // Similar search specific state:
 
   
   // API handlers
   const onSearchSubmit = (query: string) => {
-    // When a search is submitted, switch to the dashboard view
-    setView('dashboard');
     fetchGrants(query);
   };
 
@@ -92,15 +89,22 @@ const onSearchSimilarGrants = async (grantId: number, grantTitle: string) => {
     }
 };
 
-  // Initial load of all grants
-  useEffect(() => {
-      onFetchAllGrants();
-  }, []);
+  // Reset to initial view (for "Home" navigation)
+  const onResetToInitial = () => {
+    setCurrentView('initial');
+    setGrants([]);
+    setSearchQuery('');
+    setBaseGrant(null);
+    setError(null);
+  };
 
   return (
     <MantineProvider theme={theme}>
-      {view === 'initial' ? (
-          <InitialSearch onSearchSubmit={onSearchSubmit} isLoading={isLoading} />
+      {currentView === 'initial' ? (
+          <InitialSearch 
+            onSearchSubmit={onSearchSubmit} 
+            isLoading={isLoading} 
+          />
       ) : (
           <Dashboard
               grants={grants}
@@ -112,6 +116,7 @@ const onSearchSimilarGrants = async (grantId: number, grantTitle: string) => {
               onSearchSubmit={onSearchSubmit}
               onFetchAllGrants={onFetchAllGrants}
               onSearchSimilarGrants={onSearchSimilarGrants}
+              onResetToInitial={onResetToInitial}
           />
       )}
     </MantineProvider>
@@ -119,3 +124,4 @@ const onSearchSimilarGrants = async (grantId: number, grantTitle: string) => {
 }
 
 export default App;
+

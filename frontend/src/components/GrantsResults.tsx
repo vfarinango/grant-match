@@ -1,4 +1,4 @@
-import { Text, Stack } from '@mantine/core';
+import { Text, Stack, Box, Loader, Center } from '@mantine/core';
 import type { Grant, SimilarGrant } from "../services/grantsApi";
 import GrantComponent from './Grant';
 
@@ -35,17 +35,17 @@ const GrantsResults = ({ grants, loading, view, searchQuery, onSearchSimilarGran
         message = `No similar grants found.`;
     }
     return (
-        <div className="text-center py-12">
-            <Text size="lg" c="dimmed">{message}</Text>
-        </div>
+        <Box ta="center" py="xl">
+            <Text size="lg" c="text-secondary.0">{message}</Text>
+        </Box>
     );
   };
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center py-12">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-      </div>
+      <Center py="xl">
+        <Loader size="lg" color="primary-blue" />
+      </Center>
     );
   }
 
