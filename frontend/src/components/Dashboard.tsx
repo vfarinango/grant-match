@@ -1,7 +1,7 @@
 /// Dashboard.tsx code:
 import { AppShell, Burger, Group, Text, Title, NavLink, Box, Alert } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
-import { IconHome2, IconSearch, IconStar, IconAlertCircle } from '@tabler/icons-react';
+import { IconSearch, IconStar, IconAlertCircle } from '@tabler/icons-react';
 
 // Import existing components and logic
 import SearchBar from './SearchBar';
@@ -34,7 +34,7 @@ const Dashboard = ({
         <AppShell
             header={{ height: 60 }}
             navbar={{ width: 250, breakpoint: 'sm', collapsed: { mobile: !opened } }}
-            padding="md"
+            padding="xs"
         >
             <AppShell.Header>
                 <Group h="100%" px="md" justify="space-between">
@@ -55,12 +55,12 @@ const Dashboard = ({
             <AppShell.Navbar p="md">
                 {/* Navigation Links */}
                 <Box mb="md">
-                    <NavLink 
+                    {/* <NavLink 
                         label="Home"
                         leftSection={<IconHome2 size={16}/>}
                         active={false}
                         onClick={onResetToInitial}
-                    />
+                    /> */}
                     <NavLink 
                         label="Search"
                         leftSection={<IconSearch size={16}/>}
@@ -83,7 +83,7 @@ const Dashboard = ({
 
             <AppShell.Main>
                 {/* Mobile search bar */}
-                <Box hiddenFrom="sm" mb="md">
+                <Box hiddenFrom="sm" mb="md" px="sm">
                     <SearchBar 
                         onSearch={onSearchSubmit} 
                         isLoading={isLoading} 
@@ -91,7 +91,7 @@ const Dashboard = ({
                 </Box>
 
                 {/* Desktop search bar */}
-                <Box visibleFrom="sm" mb="md">
+                <Box visibleFrom="sm" mb="md" px="sm">
                     <SearchBar 
                         onSearch={onSearchSubmit} 
                         isLoading={isLoading} 
@@ -99,7 +99,7 @@ const Dashboard = ({
                 </Box>
                 
                 {currentView === 'similar' && baseGrant && (
-                    <Alert mb="md" variant="light" color="primary-blue">
+                    <Alert mb="md" variant="light" color="primary-blue" mx="sm">
                         <Text size="sm" c="text-primary.0">
                             Showing grants similar to: <Text span fw={500} c="primary-blue.3">{baseGrant.title}</Text>
                         </Text>
@@ -107,7 +107,7 @@ const Dashboard = ({
                 )}
 
                 {currentView === 'search' && searchQuery && (
-                    <Alert mb="md" variant="light" color="primary-blue">
+                    <Alert mb="md" variant="light" color="primary-blue" mx="sm">
                         <Text size="sm" c="text-primary.0">
                             Search results for: <Text span fw={500} c="primary-blue.3">"{searchQuery}"</Text>
                         </Text>
@@ -121,6 +121,7 @@ const Dashboard = ({
                         title="Error" 
                         color="red" 
                         mb="md"
+                        mx="sm"
                     >
                         {error}
                     </Alert>
@@ -128,18 +129,20 @@ const Dashboard = ({
 
                 {/* Main content */}
                 {!error && currentView !== 'initial' && (
-                    <GrantsResults 
-                        grants={grants}
-                        loading={isLoading}
-                        view={currentView as 'all' | 'search' | 'similar'}
-                        searchQuery={searchQuery}
-                        onSearchSimilarGrants={onSearchSimilarGrants}
-                    />
+                    <Box px="sm">
+                        <GrantsResults 
+                            grants={grants}
+                            loading={isLoading}
+                            view={currentView as 'all' | 'search' | 'similar'}
+                            searchQuery={searchQuery}
+                            onSearchSimilarGrants={onSearchSimilarGrants}
+                        />
+                    </Box>
                 )}
 
                 {/* Empty state for all grants view */}
                 {!isLoading && !error && grants && grants.length === 0 && currentView === 'all' && (
-                    <Box ta="center" my="xl" c="text-secondary.0">
+                    <Box ta="center" my="xl" c="text-secondary.0" mx="sm">
                         <Text size="lg" mb="xs" c="text-primary.0" fw={600}>No grants found</Text>
                         <Text size="sm">Try adjusting your filters or search criteria.</Text>
                     </Box>              
@@ -147,7 +150,7 @@ const Dashboard = ({
 
                 {/* Empty state for search */}
                 {!isLoading && !error && grants && grants.length === 0 && currentView === 'search' && (
-                    <Box ta="center" my="xl" c="text-secondary.0">
+                    <Box ta="center" my="xl" c="text-secondary.0" mx="sm">
                         <Text size="lg" mb="xs" c="text-primary.0" fw={600}>No results found</Text>
                         <Text size="sm">Try a different search query or browse all grants.</Text>
                     </Box>              

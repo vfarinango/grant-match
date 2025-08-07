@@ -11,6 +11,7 @@ interface SearchBarProps {
 
 const SearchBar = ({ onSearch, isLoading, compact = false }: SearchBarProps) => {
     const [query, setQuery] = useState<string>("");
+    const [isFocused, setIsFocused] = useState<boolean>(false);
 
     const onSearchSubmit = () => {
         onSearch(query);
@@ -21,47 +22,58 @@ const SearchBar = ({ onSearch, isLoading, compact = false }: SearchBarProps) => 
             onSearchSubmit();
         }
     };
+    
+    const handleFocus = () => {
+        setIsFocused(true);
+    };
+
+    const handleBlur = () => {
+        setIsFocused(false);
+    };
 
     return (
-        <div className="flex items-center gap-2 p-4">
-            {/* Mantine Components: TextInput and Button */}
-            <Group wrap="nowrap" className="w-full max-w-xl">
-                <TextInput
-                    placeholder={compact ? "Search grants..." : "'Grants for environmental protection in urban areas...'"}
-                    value={query}
-                    onChange={(event) => setQuery(event.currentTarget.value)}
-                    onKeyDown={handleKeyDown}
-                    disabled={isLoading} 
-                    className="flex-grow"
-                    size={compact ? "sm" : "md"}
-                    styles={compact ? {
-                        input: {
-                            minHeight: '32px',
-                        }
-                    } : undefined}
-                />
-                {/* <Button
-                    onClick={onSearchSubmit} 
-                    disabled={isLoading}
-                    loading={isLoading}
-                    size={compact ? "sm" : "md"}
-                    variant={compact ? "light" : "filled"}
-                >
-                    Search
-                </Button>    */}
-                <ActionIcon
-                    onClick={onSearchSubmit}
-                    disabled={isLoading || query.trim() === ''}
-                    loading={isLoading}
-                    size="xl"
-                    variant="filled"
-                    aria-label="Search"
-                >
-                    <IconArrowRight size={20} />
-                </ActionIcon>
+        // <Box 
+        //     style={{ 
+        //         display: 'flex', 
+        //         alignItems: 'center' 
+        //     }} 
+        //     p="md"
+        // >
+        <Group 
+            wrap="nowrap" 
+            style={{ 
+                width: '100%'}}
+        >
 
-            </Group>
-        </div>
+            <TextInput
+                placeholder={isFocused ? "" :compact ? "Search" : "Search grants"}
+                value={query}
+                onChange={(event) => setQuery(event.currentTarget.value)}
+                onKeyDown={handleKeyDown}
+                onFocus={handleFocus}
+                onBlur={handleBlur}
+                disabled={isLoading} 
+                style={{ flexGrow: 1 }}
+                size={compact ? "sm" : "md"}
+                styles={compact ? {
+                    input: {
+                        minHeight: '32px',
+                    }
+                } : undefined}
+            />
+            <ActionIcon
+                onClick={onSearchSubmit}
+                disabled={isLoading || query.trim() === ''}
+                loading={isLoading}
+                size="xl"
+                variant="filled"
+                color="primary-blue"
+                aria-label="Search"
+            >
+                <IconArrowRight size={20} />
+            </ActionIcon>
+        </Group>
+        // </Box>
     );
 }
 

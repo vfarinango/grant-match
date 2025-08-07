@@ -123,7 +123,7 @@ const GrantComponent = ({ grant, onSearchSimilarGrants, view }: GrantProps) => {
                                     onClick={handleSimilarClick}
                                     leftSection={<IconSearch size={14} />}
                                 >
-                                    Search Similar
+                                    Find Similar
                                 </Button>
                             )}
                         </Group>
