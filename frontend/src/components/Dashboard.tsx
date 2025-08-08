@@ -24,12 +24,14 @@ interface DashboardProps {
     onSelectGrant: (grantId: number) => void;
     selectedGrant?: Grant | SimilarGrant | null;
     onBackToResults: () => void;
+    onSummarizeForDetailedView: (grantId: number) => void; // New prop
+    detailedGrantSummary: string | null; // New prop
 }
 
 const Dashboard = ({
     grants, isLoading, error, searchQuery, summarizingGrantId, currentView,
     onSearchSubmit, onFetchAllGrants, onSearchSimilarGrants, onSummarize, onResetToInitial, onSelectGrant,
-    selectedGrant, onBackToResults
+    selectedGrant, onBackToResults, onSummarizeForDetailedView, detailedGrantSummary
 }: DashboardProps) => {
     const [opened, { toggle }] = useDisclosure();
 
@@ -40,8 +42,9 @@ const Dashboard = ({
                 <DetailedGrant
                     grant={selectedGrant}
                     onBackToResults={onBackToResults}
-                    onSummarize={onSummarize}
                     isBeingSummarized={summarizingGrantId === selectedGrant.id}
+                    onSummarizeForDetailedView={onSummarizeForDetailedView} // Pass down
+                    detailedGrantSummary={detailedGrantSummary} // Pass down
                 />
             );
         }
@@ -102,7 +105,6 @@ const Dashboard = ({
             </Box>
         );
     };
-
     return (
         <AppShell
             header={{ height: 60 }}

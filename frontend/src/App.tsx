@@ -40,6 +40,7 @@ function App() {
 
   // Detailed grants state
   const [selectedGrantId, setSelectedGrantId] = useState<number | null>(null);
+  const [detailedGrantSummary, setDetailedGrantSummary] = useState<string | null>(null);
 
 
   // API handlers
@@ -135,6 +136,7 @@ function App() {
     setPreviousView(currentView);
     setCurrentView('detail');
     setSimilarModalOpened(false);
+    setDetailedGrantSummary(null);
   };
 
   const onBackToResults = () => {
