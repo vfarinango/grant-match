@@ -28,7 +28,7 @@
   },
   "pg-migrate": {
     "databaseUrl": {
-        "ENV": "DATABASE_URL"
+      "ENV": "DATABASE_URL"
     },
     "dir": "migrations",
     "schema": "public",

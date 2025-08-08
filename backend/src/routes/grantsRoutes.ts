@@ -22,6 +22,7 @@ export interface Grant {
   focus_areas?: string[]; 
   posted_date?: Date; 
   created_at?: Date;
+  summary?: string;
 }
 
 // embeddings interface
@@ -61,7 +62,7 @@ router.get('/health', async (req: Request, res: Response) => {
 // GET all grants (basic testing route)
 router.get('/', async (req: Request, res: Response) => {
   try {
-    const result = await pool.query<Grant>('SELECT id, title, description, deadline, funding_amount, source, source_url, focus_areas, posted_date FROM grants');
+    const result = await pool.query<Grant>('SELECT id, title, description, deadline, funding_amount, source, source_url, focus_areas, posted_date, summary FROM grants');
     res.json(result.rows);
   } catch (err: any) {
     console.error('Error fetching grants:', err);
@@ -103,6 +104,7 @@ router.get('/search', async (req: Request, res: Response) => {
         source_url: string;
         focus_areas: string[];
         posted_date: string;
+        summary: string;
         similarity_score: number;      
     }>(
       `
@@ -164,7 +166,7 @@ router.get('/search', async (req: Request, res: Response) => {
 
 
 
-// GET similar grants of a specific grant id (Similar Search)
+// Similar Search Feature: GET similar grants of a specific grant id
 router.get('/:id/similar', async (req: Request, res: Response) => { 
   try {
     const grantId = parseInt(req.params.id, 10);
@@ -217,6 +219,7 @@ router.get('/:id/similar', async (req: Request, res: Response) => {
       source_url: row.source_url,
       focus_areas: row.focus_areas,
       posted_date: row.posted_date,
+      summary: row.summary,
       similarity_score: row.similarity_score
     }));
 
@@ -265,6 +268,74 @@ router.get('/:id/similar', async (req: Request, res: Response) => {
     });
   }
 });
+
+
+// Summarize Feature: PATCH the Grant of a specific id with a summary property
+router.patch('/:id/summarize', async (req: Request, res: Response) => {
+  // GET grant of a specific grant id
+  const grantId = req.params.id;
+
+try {
+    // 1. Validate the input ID
+    if (isNaN(parseInt(grantId, 10))) {
+      return res.status(400).json({ error: "Invalid grant ID format." });
+    }
+
+    // 2. Fetch the grant from the database using its ID
+    const grantResult = await pool.query('SELECT description FROM grants WHERE id = $1', [grantId]);
+
+    // 3. Handle case where grant is not found
+    if (grantResult.rows.length === 0) {
+      return res.status(404).json({ error: "Grant not found." });
+    }
+
+    const grantDescription = grantResult.rows[0].description;
+    
+    // 1. Generate the summary using OpenAI's Chat Completions API
+    const completion = await openai.chat.completions.create({
+        model: "gpt-3.5-turbo",
+        messages: [
+            {
+                role: "system",
+                content: "You are a helpful assistant that summarizes grant descriptions concisely and accurately for non-profit organizations. The summary should be no more than three sentences."
+            },
+            {
+                role: "user",
+                content: `Please provide a short summary of the following grant description:\n\n"${grantDescription}"`
+            }
+        ],
+        temperature: 0.7,
+        max_tokens: 150,
+    });
+
+    const generatedSummary = completion.choices[0]?.message?.content?.trim();
+
+    if (!generatedSummary) {
+        return res.status(500).json({ error: "Failed to generate a summary." });
+    }
+
+    // 2. Update the grant in the database with the new summary
+    await pool.query(
+        'UPDATE grants SET summary = $1 WHERE id = $2',
+        [generatedSummary, grantId]
+    );
+
+    // 3. Return a success response with the new summary
+    res.status(200).json({
+        message: `Summary generated and saved for grant ID: ${grantId}`,
+        summary: generatedSummary
+    });
+
+
+  } catch (error: any) {
+    console.error('Error generating or saving summary:', error);
+    res.status(500).json({
+      error: 'Failed to generate summary.',
+      details: error.message || 'An unknown error occurred.'
+    });
+  }
+});
+
 
 export default router; 
 

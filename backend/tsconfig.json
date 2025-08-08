@@ -9,6 +9,10 @@
     "allowSyntheticDefaultImports": true,
     "skipLibCheck": true,      /* Skip type checking of declaration files. */
     "forceConsistentCasingInFileNames": true, /* Ensure that casing of file names is consistent. */
+    "types": [
+      "node",
+      "jest" 
+    ],
     "resolveJsonModule": true, /* Allow importing .json files */
     "sourceMap": true,         /* Generates corresponding .map file. */
     "baseUrl": ".",            /* Base directory to resolve non-absolute module names. */

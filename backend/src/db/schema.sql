@@ -13,7 +13,8 @@ CREATE TABLE grants (
   source_url TEXT,
   focus_areas TEXT[], -- Array for multiple focus areas
   posted_date DATE,
-  created_at TIMESTAMP DEFAULT NOW()
+  created_at TIMESTAMP DEFAULT NOW(),
+  summary TEXT
 );
 
 -- Table to store the embedding vectors, linked to the grants table

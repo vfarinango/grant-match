@@ -1,5 +1,6 @@
 import request from 'supertest';
 import app from '../../src/app'; // Corrected import path
+import { pool } from '../../src/db/connection';
 
 describe('Grants API - Search Similar Feature', () => {
 
