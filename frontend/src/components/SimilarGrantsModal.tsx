@@ -9,6 +9,9 @@ interface SimilarGrantsModalProps {
     opened: boolean;
     loading: boolean;
     onSearchSimilarGrants: (grantId: number, grantTitle: string) => Promise<void>;
+    onSummarize: (grantId: number) => void; 
+    summarizingGrantId?: number | null; 
+    onSelectGrant: (grantId: number) => void;
     }
 
     const SimilarGrantsModal = ({ 
@@ -18,9 +21,12 @@ interface SimilarGrantsModalProps {
     loading, 
     baseGrant,
     onSearchSimilarGrants,
+    onSummarize,
+    summarizingGrantId,
+    onSelectGrant,
     }: SimilarGrantsModalProps) => {
 
-        console.log('Modal props:', { opened, loading, similarGrants, baseGrant });
+        console.log('Modal props:', { opened, loading, similarGrants, baseGrant, summarizingGrantId });
     
         const renderContent = () => {
             if (loading) {
@@ -50,7 +56,10 @@ interface SimilarGrantsModalProps {
                         key={grant.id} 
                         grant={grant}
                         onSearchSimilarGrants={onSearchSimilarGrants}
+                        onSummarize={onSummarize}
+                        onSelectGrant={onSelectGrant} 
                         view="similar"
+                        isBeingSummarized={summarizingGrantId === grant.id}
                     />
                     ))}
                 </Stack>

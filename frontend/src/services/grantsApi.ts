@@ -29,6 +29,7 @@ interface SearchResponse {
 }
 
 interface SimilarGrant extends Grant {
+    summary?: string;
     similarity_score: number;
 };
 

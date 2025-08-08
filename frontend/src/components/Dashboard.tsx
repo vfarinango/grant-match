@@ -1,4 +1,3 @@
-// import { Fragment } from 'react';
 import { AppShell, Burger, Group, Text, Title, NavLink, Box, Alert } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
 import { IconSearch, IconStar, IconAlertCircle } from '@tabler/icons-react';
@@ -7,6 +6,7 @@ import { IconSearch, IconStar, IconAlertCircle } from '@tabler/icons-react';
 import SearchBar from './SearchBar';
 import GrantsResults from './GrantsResults';
 import GrantsFilters from './GrantsFilters';
+import DetailedGrant from './DetailedGrant';
 import type { Grant, SimilarGrant } from '../services/grantsApi';
 
 interface DashboardProps {
@@ -15,19 +15,93 @@ interface DashboardProps {
     error: string | null;
     searchQuery: string;
     summarizingGrantId?: number | null;
-    currentView: 'all' | 'search' | 'similar' | 'initial';
+    currentView: 'all' | 'search' | 'similar' | 'initial' | 'detail';
     onSearchSubmit: (query: string) => void;
     onFetchAllGrants: () => void;
     onSearchSimilarGrants: (grantId: number, grantTitle: string) => Promise<void>;
     onSummarize: (grantId: number) => void;
     onResetToInitial: () => void;
+    onSelectGrant: (grantId: number) => void;
+    selectedGrant?: Grant | SimilarGrant | null;
+    onBackToResults: () => void;
 }
 
 const Dashboard = ({
     grants, isLoading, error, searchQuery, summarizingGrantId, currentView,
-    onSearchSubmit, onFetchAllGrants, onSearchSimilarGrants, onSummarize, onResetToInitial
+    onSearchSubmit, onFetchAllGrants, onSearchSimilarGrants, onSummarize, onResetToInitial, onSelectGrant,
+    selectedGrant, onBackToResults
 }: DashboardProps) => {
     const [opened, { toggle }] = useDisclosure();
+
+    // Determine the content to render inside the main section
+    const renderMainContent = () => {
+        if (currentView === 'detail' && selectedGrant) {
+            return (
+                <DetailedGrant
+                    grant={selectedGrant}
+                    onBackToResults={onBackToResults}
+                    onSummarize={onSummarize}
+                    isBeingSummarized={summarizingGrantId === selectedGrant.id}
+                />
+            );
+        }
+
+        // Display alerts and results based on search or 'all' view
+        const showSearchAlert = currentView === 'search' && searchQuery && !error;
+        const showGrantsResults = !error && currentView !== 'initial' && grants.length > 0;
+        const showEmptyState = !isLoading && !error && grants.length === 0 && currentView !== 'initial';
+        // const showInitialEmptyState = !isLoading && !error && grants.length === 0 && currentView === 'initial';
+
+        return (
+            <Box>
+                {showSearchAlert && (
+                    <Alert mb="md" variant="light" color="primary-blue" mx="sm">
+                        <Text size="sm" c="text-primary.0">
+                            Search results for: <Text span fw={500} c="primary-blue.3">"{searchQuery}"</Text>
+                        </Text>
+                    </Alert>
+                )}
+
+                {error && (
+                    <Alert
+                        icon={<IconAlertCircle size={16} />}
+                        title="Error"
+                        color="red"
+                        mb="md"
+                        mx="sm"
+                    >
+                        {error}
+                    </Alert>
+                )}
+
+                {showGrantsResults && (
+                    <Box px="sm">
+                        <GrantsResults
+                            grants={grants}
+                            loading={isLoading}
+                            summarizingGrantId={summarizingGrantId}
+                            view={currentView as 'all' | 'search' | 'similar'}
+                            searchQuery={searchQuery}
+                            onSearchSimilarGrants={onSearchSimilarGrants}
+                            onSummarize={onSummarize}
+                            onSelectGrant={onSelectGrant}
+                        />
+                    </Box>
+                )}
+
+                {showEmptyState && (
+                    <Box ta="center" my="xl" c="text-secondary.0" mx="sm">
+                        <Text size="lg" mb="xs" c="text-primary.0" fw={600}>
+                            {currentView === 'all' ? 'No grants found' : 'No results found'}
+                        </Text>
+                        <Text size="sm">
+                            {currentView === 'all' ? 'Try adjusting your filters or search criteria.' : 'Try a different search query or browse all grants.'}
+                        </Text>
+                    </Box>
+                )}
+            </Box>
+        );
+    };
 
     return (
         <AppShell
@@ -39,8 +113,8 @@ const Dashboard = ({
                 <Group h="100%" px="md" justify="space-between">
                     <Group>
                         <Burger opened={opened} onClick={toggle} hiddenFrom="sm" size="sm" />
-                        <Title 
-                            order={2} 
+                        <Title
+                            order={2}
                             c="text-primary.0"
                             style={{ cursor: 'pointer' }}
                             onClick={onResetToInitial}
@@ -52,22 +126,19 @@ const Dashboard = ({
             </AppShell.Header>
 
             <AppShell.Navbar p="md">
-                {/* Navigation Links */}
                 <Box mb="md">
-                    <NavLink 
+                    <NavLink
                         label="Search"
                         leftSection={<IconSearch size={16}/>}
-                        active={currentView === 'all'}
+                        active={currentView === 'all' || currentView === 'search'}
                         onClick={onFetchAllGrants}
                     />
-                    <NavLink 
-                        label="Saved" 
+                    <NavLink
+                        label="Saved"
                         leftSection={<IconStar size={16}/>}
                         disabled={true}
                     />
                 </Box>
-
-                {/* Filters Section */}
                 <Box>
                     <Text fw={500} mb="xs" size="sm" c="text-secondary.0">Filters</Text>
                     <GrantsFilters />
@@ -75,71 +146,16 @@ const Dashboard = ({
             </AppShell.Navbar>
 
             <AppShell.Main>
-                {/* Search bar */}
                 <Box mb="md" px="sm">
-                    <SearchBar 
-                        onSearch={onSearchSubmit} 
-                        isLoading={isLoading} 
+                    <SearchBar
+                        onSearch={onSearchSubmit}
+                        isLoading={isLoading}
                     />
                 </Box>
-                
-                {currentView === 'search' && searchQuery && (
-                    <Alert mb="md" variant="light" color="primary-blue" mx="sm">
-                        <Text size="sm" c="text-primary.0">
-                            Search results for: <Text span fw={500} c="primary-blue.3">"{searchQuery}"</Text>
-                        </Text>
-                    </Alert>
-                )}
-
-                {/* Error handling */}
-                {error && (
-                    <Alert 
-                        icon={<IconAlertCircle size={16} />} 
-                        title="Error" 
-                        color="red" 
-                        mb="md"
-                        mx="sm"
-                    >
-                        {error}
-                    </Alert>
-                )}
-
-                {/* Main content */}
-                {!error && currentView !== 'initial' && (
-                    <Box px="sm">
-                        <GrantsResults 
-                            grants={grants}
-                            loading={isLoading}
-                            summarizingGrantId={summarizingGrantId}
-                            view={currentView as 'all' | 'search' | 'similar'}
-                            searchQuery={searchQuery}
-                            onSearchSimilarGrants={onSearchSimilarGrants}
-                            onSummarize={onSummarize}
-                        />
-                    </Box>
-                )}
-
-                {/* Empty state for all grants view */}
-                {!isLoading && !error && grants && grants.length === 0 && currentView === 'all' && (
-                    <Box ta="center" my="xl" c="text-secondary.0" mx="sm">
-                        <Text size="lg" mb="xs" c="text-primary.0" fw={600}>No grants found</Text>
-                        <Text size="sm">Try adjusting your filters or search criteria.</Text>
-                    </Box>              
-                )}
-
-                {/* Empty state for search */}
-                {!isLoading && !error && grants && grants.length === 0 && currentView === 'search' && (
-                    <Box ta="center" my="xl" c="text-secondary.0" mx="sm">
-                        <Text size="lg" mb="xs" c="text-primary.0" fw={600}>No results found</Text>
-                        <Text size="sm">Try a different search query or browse all grants.</Text>
-                    </Box>              
-                )}
+                {renderMainContent()}
             </AppShell.Main>
         </AppShell>
-    )
+    );
 };
 
 export default Dashboard;
-
-
-

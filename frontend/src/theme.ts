@@ -56,7 +56,7 @@ export const theme = createTheme({
             defaultProps: {
                 centered: true,
                 radius: 'md',
-                transitionProps: { transition: 'fade', duration: 200 },
+                transitionProps: { transition: 'fade', duration: 40 },
                 overlayProps: { backgroundOpacity: 0.55, blur: 3 },
             },
             styles: (theme: MantineTheme) => ({

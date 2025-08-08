@@ -1,8 +1,8 @@
 import { Card, Text, Badge, Button, Group, Stack, Anchor, Box, Divider, Loader } from '@mantine/core';
-import { IconSearch, IconFileText } from '@tabler/icons-react'; //IconCalendar, IconCurrencyDollar, IconBuilding,
-import type { Grant, SimilarGrant } from "../services/grantsApi";
-import React from 'react'; // Import React for the synthetic event type
+import { IconArrowBack, IconFileText } from '@tabler/icons-react';
+import type { Grant, SimilarGrant } from '../services/grantsApi';
 
+// Helper functions (could be imported from another utility file)
 const formatCurrency = (amount: number | undefined): string => {
     if (!amount) return 'Amount not specified';
     return new Intl.NumberFormat('en-US', {
@@ -22,66 +22,75 @@ const formatDate = (dateString: Date | string | undefined): string => {
     });
 };
 
-
 const isSimilarGrant = (grant: Grant | SimilarGrant): grant is SimilarGrant => {
     return (grant as SimilarGrant).similarity_score !== undefined;
-}
+};
 
-interface GrantProps {
+// Define the props for the DetailedGrant component
+interface DetailedGrantProps {
     grant: Grant | SimilarGrant;
-    onSearchSimilarGrants: (grantId: number, grantTitle: string) => void;
+    onBackToResults: () => void;
     onSummarize: (grantId: number) => void;
-    view: 'all' | 'search' | 'similar';
     isBeingSummarized?: boolean;
-    onSelectGrant: (grantId: number) => void;
 }
 
-const GrantComponent = ({ grant, onSearchSimilarGrants, onSummarize, view, isBeingSummarized, onSelectGrant }: GrantProps) => {
-    const handleSimilarClick = (event: React.MouseEvent<HTMLButtonElement>) => {
-        event.stopPropagation();
-        console.log('Similar click handler called', { grantId: grant.id, grantTitle: grant.title });
-        
-        if (grant.id && grant.title) {
-            onSearchSimilarGrants(grant.id, grant.title);
-        }
-    };
-    
-    // debug log
-    console.log(`Grant ${grant.id}: isBeingSummarized =`, isBeingSummarized);
-    const handleSummarizeClick = (event: React.MouseEvent<HTMLButtonElement>) => {
-        event.stopPropagation();
-        console.log(`Clicking summarize for grant ${grant.id}`);
+const DetailedGrant = ({ grant, onBackToResults, onSummarize, isBeingSummarized }: DetailedGrantProps) => {
+
+    const handleSummarizeClick = () => {
         if (grant.id) {
             onSummarize(grant.id);
         }
     };
 
     return (
-        <Card 
-            shadow="sm" 
-            padding="lg" 
-            radius="md" 
-            withBorder
-            style={{ cursor: 'pointer' }}
-        >
-            <Box onClick={() => onSelectGrant(grant.id)}>
-                <Stack gap="sm">
-                    <Group justify="space-between" align="flex-start">
-                        <Box style={{ flex: 1 }}>
-                            <Text fw={600} size="lg" mb="xs" c="text-primary.0">
-                                {grant.title}
-                            </Text>
-                            <Text size="sm" c="text-secondary.0" lineClamp={3}>
-                                {grant.description}
-                            </Text>
-                        </Box>
+        <Stack gap="md" px="md">
+            {/* Back button to return to search results */}
+            <Button
+                variant="subtle"
+                size="sm"
+                color="primary-blue"
+                leftSection={<IconArrowBack size={14} />}
+                onClick={onBackToResults}
+                style={{ alignSelf: 'flex-start' }}
+            >
+                Back to Results
+            </Button>
 
+            <Card shadow="sm" padding="lg" radius="md" withBorder>
+                <Stack gap="sm">
+                    {/* Grant Title and Posted Date */}
+                    <Group justify="space-between" align="flex-start">
+                        <Text fw={600} size="h2" mb="xs" c="text-primary.0">
+                            {grant.title}
+                        </Text>
                         <Box ta="right" style={{ minWidth: 'fit-content' }} ml="md">
                             <Text size="xs" c="text-secondary.0">Posted</Text>
                             <Text size="sm" c="text-primary.0">{formatDate(grant.posted_date)}</Text>
                         </Box>
                     </Group>
 
+                    {/* Full Description (not line-clamped) */}
+                    <Text size="sm" c="text-secondary.0" style={{ whiteSpace: 'pre-line' }}>
+                        {grant.description}
+                    </Text>
+
+                    {/* Summary Section */}
+                    {grant.summary && (
+                        <Box mt="sm">
+                            <Divider mb="sm" color="gray.2" />
+                            <Text size="xs" c="text-secondary.0" fw={600} mb="xs">Summary:</Text>
+                            <Text size="sm" c="text-primary.0" style={{
+                                backgroundColor: '#f8f9ff',
+                                padding: '12px',
+                                borderRadius: '8px',
+                                border: '1px solid #e7f0ff'
+                            }}>
+                                {grant.summary}
+                            </Text>
+                        </Box>
+                    )}
+
+                    {/* Grant Details (Amount, Deadline, Source, Relevance) */}
                     <Group gap="lg" mt="sm">
                         <Box>
                             <Text size="xs" c="text-secondary.0">Funding Amount</Text>
@@ -106,7 +115,6 @@ const GrantComponent = ({ grant, onSearchSimilarGrants, onSummarize, view, isBei
                             </Box>
                         )}
 
-                        {/* Conditionally display relevance score for search results */}
                         {isSimilarGrant(grant) && (
                             <Box>
                                 <Text size="xs" c="text-secondary.0">Relevance</Text>
@@ -117,6 +125,7 @@ const GrantComponent = ({ grant, onSearchSimilarGrants, onSummarize, view, isBei
                         )}
                     </Group>
 
+                    {/* Focus Areas */}
                     {grant.focus_areas && grant.focus_areas.length > 0 && (
                         <Group gap="xs" mt="xs">
                             <Text size="xs" c="text-secondary.0">Focus Areas:</Text>
@@ -128,25 +137,9 @@ const GrantComponent = ({ grant, onSearchSimilarGrants, onSummarize, view, isBei
                         </Group>
                     )}
 
-                    {/* SUMMARY SECTION */}
-                    {grant.summary && (
-                        <Box mt="sm">
-                            <Divider mb="sm" color="gray.2" />
-                            <Text size="xs" c="text-secondary.0" fw={600} mb="xs">Summary:</Text>
-                            <Text size="sm" c="text-primary.0" style={{ 
-                                backgroundColor: '#f8f9ff', 
-                                padding: '12px', 
-                                borderRadius: '8px',
-                                border: '1px solid #e7f0ff'
-                            }}>
-                                {grant.summary}
-                            </Text>
-                        </Box>
-                    )}
-
+                    {/* Action Buttons */}
                     <Box>
                         <Divider my="sm" color="gray.2" />
-                        
                         <Group justify="space-between">
                             <Group gap="sm">
                                 <Button 
@@ -159,20 +152,6 @@ const GrantComponent = ({ grant, onSearchSimilarGrants, onSummarize, view, isBei
                                 >
                                     {isBeingSummarized ? 'Summarizing...' : (grant.summary ? 'Re-summarize' : 'Summarize')}
                                 </Button>
-                                
-                                {/* Conditionally display "Search Similar" button */}
-                                {view != 'similar' && (
-                                    <Button 
-                                        variant="outline" 
-                                        size="sm"
-                                        color="primary-blue"
-                                        onClick={handleSimilarClick}
-                                        leftSection={<IconSearch size={14} />}
-                                        
-                                    >
-                                        Find Similar
-                                    </Button>
-                                )}
                             </Group>
 
                             {grant.source_url && (
@@ -181,7 +160,6 @@ const GrantComponent = ({ grant, onSearchSimilarGrants, onSummarize, view, isBei
                                     target="_blank" 
                                     size="sm"
                                     c="primary-blue.3"
-                                    onClick={(event) => event.stopPropagation()} 
                                 >
                                     Apply →
                                 </Anchor>
@@ -189,15 +167,9 @@ const GrantComponent = ({ grant, onSearchSimilarGrants, onSummarize, view, isBei
                         </Group>
                     </Box>
                 </Stack>
-
-            </Box>
-        </Card>
+            </Card>
+        </Stack>
     );
 };
 
-export default GrantComponent;
-// Summarize grant feature Frontend: 
-// Write the resultList Component
-// Write the Grant Component
-// Within the Grant component, include conditional logic that displays the summary if the summary button is pressed and a summary exists. 
-// If the summary doesn’t exist, it calls a function from App.ts that sends a patch request to the backend to add a summary to the grant.
+export default DetailedGrant;

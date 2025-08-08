@@ -5,14 +5,24 @@ import GrantComponent from './Grant';
 interface GrantsResultsProps {
   grants: (Grant | SimilarGrant)[];
   loading: boolean;
+  summarizingGrantId?: number | null;
   view: 'all' | 'search' | 'similar';
   searchQuery?: string;
   onSearchSimilarGrants: (grantId: number, grantTitle: string) => Promise<void>;
   onSummarize: (grantId: number) => void;
+  onSelectGrant: (grantId: number) => void;
 }
 
-const GrantsResults = ({ grants, loading, view, searchQuery, onSearchSimilarGrants, onSummarize }: GrantsResultsProps) => {
-
+const GrantsResults = ({ 
+  grants, 
+  loading, 
+  summarizingGrantId, 
+  view, searchQuery, 
+  onSearchSimilarGrants, 
+  onSummarize, 
+  onSelectGrant
+}: GrantsResultsProps) => {
+  
   const renderHeader = () => {
     const countMessage = `${grants.length} grant${grants.length !== 1 ? 's' : ''}`;
 
@@ -68,7 +78,9 @@ const GrantsResults = ({ grants, loading, view, searchQuery, onSearchSimilarGran
             grant={grant}
             onSearchSimilarGrants={onSearchSimilarGrants}
             onSummarize={onSummarize}
+            onSelectGrant={onSelectGrant} 
             view={view}
+            isBeingSummarized={summarizingGrantId === grant.id}
           />
         ))}
       </Stack>

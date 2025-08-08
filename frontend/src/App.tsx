@@ -26,7 +26,7 @@ function App() {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState<string>(''); // Track search query
-  const [currentView, setCurrentView] = useState<'all' | 'search' |'initial'>('initial'); 
+  const [currentView, setCurrentView] = useState<'all' | 'search' |'initial' | 'detail'>('initial'); 
   
   // Similar grants modal state
   const [similarGrants, setSimilarGrants] = useState<SimilarGrant[]>([]);
@@ -34,8 +34,12 @@ function App() {
   const [similarLoading, setSimilarLoading] = useState<boolean>(false);
   const [baseGrant, setBaseGrant] = useState<{ id: number; title: string } | null>(null); // Similar search specific state:
   
-  // Summarize grant loading state
+  // Summarize grant loading state and store previous view
   const [summarizingGrantId, setSummarizingGrantId] = useState<number | null>(null);
+  const [previousView, setPreviousView] = useState<'all' | 'search' | 'initial' | 'detail'>('initial');
+
+  // Detailed grants state
+  const [selectedGrantId, setSelectedGrantId] = useState<number | null>(null);
 
 
   // API handlers
@@ -94,22 +98,48 @@ function App() {
   };
 
   const handleSummarize = async (grantId: number) => {
+    console.log('SETTING summarizingGrantId to:', grantId);
     setSummarizingGrantId(grantId);
     setError(null);
+    const startTime = Date.now();
+
     try {
         const summary = await getGrantSummaryFromApi(grantId);
         console.log('Received summary:', summary); // debug log
+        const elapsed = Date.now() - startTime;
+        
+        if (elapsed < 300) {
+          await new Promise(resolve => setTimeout(resolve, 300 - elapsed));
+        }
         // Find the grant to update and add the summary
         setGrants(currentGrants => currentGrants.map(grant =>
             grant.id === grantId ? { ...grant, summary } : grant
         ));
+
+      setSimilarGrants(currentSimilarGrants => currentSimilarGrants.map(grant =>
+          grant.id === grantId ? { ...grant, summary } : grant
+      ));
         console.log('Grant updated with summary:', summary); // debug log
     } catch (err) {
         console.error("Summarize failed:", err);
         setError("An error occurred while generating the summary.");
     } finally {
+        console.log('CLEARING summarizingGrantId');
         setSummarizingGrantId(null);
     }
+  };
+
+
+  const onSelectGrant = (grantId: number) => {
+    setSelectedGrantId(grantId);
+    setPreviousView(currentView);
+    setCurrentView('detail');
+    setSimilarModalOpened(false);
+  };
+
+  const onBackToResults = () => {
+    setSelectedGrantId(null);
+    setCurrentView(previousView);
   };
 
   const onCloseSimilarModal = () => {
@@ -129,8 +159,13 @@ function App() {
     setError(null);
   };
 
+
+    // Find the selected grant for the detail view
+  const selectedGrant = grants.find(g => g.id === selectedGrantId);
+
   return (
     <MantineProvider theme={theme}>
+        {/* Conditional to check if view is Search */}
         {currentView === 'initial' ? (
             <InitialSearch 
               onSearchSubmit={onSearchSubmit} 
@@ -149,8 +184,10 @@ function App() {
                 onSearchSimilarGrants={onSearchSimilarGrants}
                 onSummarize={handleSummarize}
                 onResetToInitial={onResetToInitial}
+                onSelectGrant={onSelectGrant}
+                selectedGrant={selectedGrant} 
+                onBackToResults={onBackToResults} 
             />
-
         )}
 
         {/* Similar Grants Modal */}
@@ -161,6 +198,9 @@ function App() {
           loading={similarLoading}
           baseGrant={baseGrant}
           onSearchSimilarGrants={onSearchSimilarGrants}
+          onSummarize={handleSummarize}
+          onSelectGrant={onSelectGrant} 
+          summarizingGrantId={summarizingGrantId}
         />
     </MantineProvider>
   );
