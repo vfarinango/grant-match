@@ -18,12 +18,13 @@ interface DashboardProps {
     onSearchSubmit: (query: string) => void;
     onFetchAllGrants: () => void;
     onSearchSimilarGrants: (grantId: number, grantTitle: string) => Promise<void>;
+    onSummarize: (grantId: number) => void;
     onResetToInitial: () => void;
 }
 
 const Dashboard = ({
     grants, isLoading, error, searchQuery, currentView,
-    onSearchSubmit, onFetchAllGrants, onSearchSimilarGrants, onResetToInitial
+    onSearchSubmit, onFetchAllGrants, onSearchSimilarGrants, onSummarize, onResetToInitial
 }: DashboardProps) => {
     const [opened, { toggle }] = useDisclosure();
 
@@ -111,6 +112,7 @@ const Dashboard = ({
                             view={currentView as 'all' | 'search' | 'similar'}
                             searchQuery={searchQuery}
                             onSearchSimilarGrants={onSearchSimilarGrants}
+                            onSummarize={onSummarize}
                         />
                     </Box>
                 )}

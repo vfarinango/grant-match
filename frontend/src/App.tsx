@@ -9,7 +9,7 @@
 
 import { useState } from 'react';
 import { MantineProvider } from '@mantine/core';
-import { getGrantsFromApi, searchGrantsFromApi, searchSimilarGrantsFromApi} from './services/grantsApi'; 
+import { getGrantsFromApi, searchGrantsFromApi, searchSimilarGrantsFromApi, getGrantSummaryFromApi} from './services/grantsApi'; 
 import type { Grant, SimilarGrant } from './services/grantsApi'; 
 
 import { theme } from './theme';
@@ -89,6 +89,23 @@ function App() {
       }
   };
 
+  const handleSummarize = async (grantId: number) => {
+    setIsLoading(true);
+    setError(null);
+    try {
+        const summary = await getGrantSummaryFromApi(grantId);
+        // Find the grant to update and add the summary
+        setGrants(currentGrants => currentGrants.map(grant =>
+            grant.id === grantId ? { ...grant, summary } : grant
+        ));
+    } catch (err) {
+        console.error("Summarize failed:", err);
+        setError("An error occurred while generating the summary.");
+    } finally {
+        setIsLoading(false);
+    }
+  };
+
   const onCloseSimilarModal = () => {
     setSimilarModalOpened(false);
     setSimilarGrants([]);
@@ -123,6 +140,7 @@ function App() {
                 onSearchSubmit={onSearchSubmit}
                 onFetchAllGrants={onFetchAllGrants}
                 onSearchSimilarGrants={onSearchSimilarGrants}
+                onSummarize={handleSummarize}
                 onResetToInitial={onResetToInitial}
             />
 

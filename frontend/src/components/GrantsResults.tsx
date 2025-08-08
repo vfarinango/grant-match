@@ -8,9 +8,10 @@ interface GrantsResultsProps {
   view: 'all' | 'search' | 'similar';
   searchQuery?: string;
   onSearchSimilarGrants: (grantId: number, grantTitle: string) => Promise<void>;
+  onSummarize: (grantId: number) => void;
 }
 
-const GrantsResults = ({ grants, loading, view, searchQuery, onSearchSimilarGrants }: GrantsResultsProps) => {
+const GrantsResults = ({ grants, loading, view, searchQuery, onSearchSimilarGrants, onSummarize }: GrantsResultsProps) => {
 
   const renderHeader = () => {
     const countMessage = `${grants.length} grant${grants.length !== 1 ? 's' : ''}`;
@@ -66,6 +67,7 @@ const GrantsResults = ({ grants, loading, view, searchQuery, onSearchSimilarGran
             key={grant.id} 
             grant={grant}
             onSearchSimilarGrants={onSearchSimilarGrants}
+            onSummarize={onSummarize}
             view={view}
           />
         ))}

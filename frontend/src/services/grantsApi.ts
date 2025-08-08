@@ -110,5 +110,22 @@ const searchSimilarGrantsFromApi = async (grantId: number): Promise<SimilarSearc
     }
 };
 
-export { getGrantsFromApi, searchGrantsFromApi, searchSimilarGrantsFromApi };
+// Function to make a patch request to a specific grantId to the backend API
+const getGrantSummaryFromApi = async (grantId: number): Promise<string> => {
+    if (!BACKEND_URL) {
+        throw new Error("VITE_APP_BACKEND_URL is not defined in frontend/.env or Netlify.");
+    }
+
+    try {
+        const apiUrl = `${BACKEND_URL}/api/grants/${grantId}/summarize`;
+        const response = await axios.patch<{ message: string, summary: string }>(apiUrl);
+        // The backend returns an object with a 'summary' property
+        return response.data.summary;
+    } catch (error) {
+        console.error('Error generating grant summary:', error);
+        throw error;
+    }
+}
+
+export { getGrantsFromApi, searchGrantsFromApi, searchSimilarGrantsFromApi, getGrantSummaryFromApi };
 export type { Grant, SearchResponse, SimilarGrant, SimilarSearchResponse };

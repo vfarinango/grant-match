@@ -1,5 +1,5 @@
 import { Card, Text, Badge, Button, Group, Stack, Anchor, Box, Divider} from '@mantine/core';
-import { IconSearch} from '@tabler/icons-react'; //IconCalendar, IconCurrencyDollar, IconBuilding,
+import { IconSearch, IconFileText } from '@tabler/icons-react'; //IconCalendar, IconCurrencyDollar, IconBuilding,
 import type { Grant, SimilarGrant } from "../services/grantsApi";
 import React from 'react'; // Import React for the synthetic event type
 
@@ -30,16 +30,23 @@ const isSimilarGrant = (grant: Grant | SimilarGrant): grant is SimilarGrant => {
 interface GrantProps {
     grant: Grant | SimilarGrant;
     onSearchSimilarGrants: (grantId: number, grantTitle: string) => void;
+    onSummarize: (grantId: number) => void;
     view: 'all' | 'search' | 'similar';
 }
 
-const GrantComponent = ({ grant, onSearchSimilarGrants, view }: GrantProps) => {
+const GrantComponent = ({ grant, onSearchSimilarGrants, onSummarize, view }: GrantProps) => {
     const handleSimilarClick = (event: React.MouseEvent<HTMLButtonElement>) => {
         event.stopPropagation();
         console.log('Similar click handler called', { grantId: grant.id, grantTitle: grant.title });
         
         if (grant.id && grant.title) {
             onSearchSimilarGrants(grant.id, grant.title);
+        }
+    };
+
+    const handleSummarizeClick = () => {
+        if (grant.id) {
+            onSummarize(grant.id);
         }
     };
 
@@ -113,7 +120,13 @@ const GrantComponent = ({ grant, onSearchSimilarGrants, view }: GrantProps) => {
                     
                     <Group justify="space-between">
                         <Group gap="sm">
-                            <Button variant="filled" size="sm" color="primary-blue">
+                            <Button 
+                                variant="filled" 
+                                size="sm" 
+                                color="primary-blue"
+                                onClick={handleSummarizeClick}
+                                leftSection={<IconFileText size={14} />}
+                            >
                                 Summarize
                             </Button>
                             
