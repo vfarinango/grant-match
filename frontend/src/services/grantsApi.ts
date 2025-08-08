@@ -13,6 +13,7 @@ interface Grant {
     posted_date?: Date; 
     embedding?: number[]; 
     created_at?: Date | string;
+    summary?: string;
 }
 
 interface SearchResponse {

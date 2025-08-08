@@ -1,20 +1,30 @@
 import { useState } from "react";
 import { TextInput, ActionIcon, Group } from '@mantine/core'; 
-import { IconArrowRight } from '@tabler/icons-react';
+import { IconArrowRight, IconSearch } from '@tabler/icons-react';
 
 
 interface SearchBarProps {
     onSearch: (query: string) => void;
     isLoading: boolean;
-    compact?: boolean;
+    // compact?: boolean;
 }
 
-const SearchBar = ({ onSearch, isLoading, compact = false }: SearchBarProps) => {
+const SearchBar = ({ onSearch, isLoading }: SearchBarProps) => {
     const [query, setQuery] = useState<string>("");
     const [isFocused, setIsFocused] = useState<boolean>(false);
 
     const onSearchSubmit = () => {
         onSearch(query);
+    };
+
+    // The button should be visually disabled when the query is empty or loading
+    const isButtonDisabled = isLoading || query.trim() === '';
+
+    const handleSearchSubmit = () => {
+        // Perform a check here to prevent an empty search
+        if (!isButtonDisabled) {
+            onSearch(query);
+        }
     };
 
     const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
@@ -32,14 +42,9 @@ const SearchBar = ({ onSearch, isLoading, compact = false }: SearchBarProps) => 
     };
 
     return (
-        <Group 
-            wrap="nowrap" 
-            style={{ 
-                width: '100%'}}
-        >
-
+        <Group wrap="nowrap" style={{ width: '100%'}}>
             <TextInput
-                placeholder={isFocused ? "" :compact ? "Search" : "Search grants"}
+                placeholder={isFocused ? "" : "Find anything"}
                 value={query}
                 onChange={(event) => setQuery(event.currentTarget.value)}
                 onKeyDown={handleKeyDown}
@@ -47,21 +52,21 @@ const SearchBar = ({ onSearch, isLoading, compact = false }: SearchBarProps) => 
                 onBlur={handleBlur}
                 disabled={isLoading} 
                 style={{ flexGrow: 1 }}
-                size={compact ? "sm" : "md"}
-                styles={compact ? {
-                    input: {
-                        minHeight: '32px',
-                    }
-                } : undefined}
+                size="md"
+                leftSection={<IconSearch size={16} />}
             />
             <ActionIcon
-                onClick={onSearchSubmit}
-                disabled={isLoading || query.trim() === ''}
+                onClick={handleSearchSubmit}
                 loading={isLoading}
                 size="xl"
                 variant="filled"
                 color="primary-blue"
                 aria-label="Search"
+                style={{
+                    cursor: isButtonDisabled ? 'not-allowed' : 'pointer',
+                    opacity: isButtonDisabled ? 0.5 : 1,
+                    pointerEvents: isButtonDisabled ? 'none' : 'auto',
+                }}
             >
                 <IconArrowRight size={20} />
             </ActionIcon>

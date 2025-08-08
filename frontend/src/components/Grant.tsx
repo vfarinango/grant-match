@@ -1,4 +1,4 @@
-import { Card, Text, Badge, Button, Group, Stack, Anchor, Box, Divider} from '@mantine/core';
+import { Card, Text, Badge, Button, Group, Stack, Anchor, Box, Divider, Loader} from '@mantine/core';
 import { IconSearch, IconFileText } from '@tabler/icons-react'; //IconCalendar, IconCurrencyDollar, IconBuilding,
 import type { Grant, SimilarGrant } from "../services/grantsApi";
 import React from 'react'; // Import React for the synthetic event type
@@ -32,9 +32,10 @@ interface GrantProps {
     onSearchSimilarGrants: (grantId: number, grantTitle: string) => void;
     onSummarize: (grantId: number) => void;
     view: 'all' | 'search' | 'similar';
+    isBeingSummarized?: boolean;
 }
 
-const GrantComponent = ({ grant, onSearchSimilarGrants, onSummarize, view }: GrantProps) => {
+const GrantComponent = ({ grant, onSearchSimilarGrants, onSummarize, view, isBeingSummarized }: GrantProps) => {
     const handleSimilarClick = (event: React.MouseEvent<HTMLButtonElement>) => {
         event.stopPropagation();
         console.log('Similar click handler called', { grantId: grant.id, grantTitle: grant.title });
@@ -115,6 +116,22 @@ const GrantComponent = ({ grant, onSearchSimilarGrants, onSummarize, view }: Gra
                     </Group>
                 )}
 
+                {/* SUMMARY SECTION */}
+                {grant.summary && (
+                    <Box mt="sm">
+                        <Divider mb="sm" color="gray.2" />
+                        <Text size="xs" c="text-secondary.0" fw={600} mb="xs">Summary:</Text>
+                        <Text size="sm" c="text-primary.0" style={{ 
+                            backgroundColor: '#f8f9ff', 
+                            padding: '12px', 
+                            borderRadius: '8px',
+                            border: '1px solid #e7f0ff'
+                        }}>
+                            {grant.summary}
+                        </Text>
+                    </Box>
+                )}
+
                 <Box>
                     <Divider my="sm" color="gray.2" />
                     
@@ -125,9 +142,10 @@ const GrantComponent = ({ grant, onSearchSimilarGrants, onSummarize, view }: Gra
                                 size="sm" 
                                 color="primary-blue"
                                 onClick={handleSummarizeClick}
-                                leftSection={<IconFileText size={14} />}
+                                leftSection={isBeingSummarized ? <Loader size={14} color="white" /> : <IconFileText size={14} />}
+                                disabled={isBeingSummarized}
                             >
-                                Summarize
+                                {isBeingSummarized ? 'Summarizing...' : (grant.summary ? 'Re-summarize' : 'Summarize')}
                             </Button>
                             
                             {/* Conditionally display "Search Similar" button */}

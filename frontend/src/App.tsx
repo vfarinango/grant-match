@@ -34,6 +34,10 @@ function App() {
   const [similarLoading, setSimilarLoading] = useState<boolean>(false);
   const [baseGrant, setBaseGrant] = useState<{ id: number; title: string } | null>(null); // Similar search specific state:
   
+  // Summarize grant loading state
+  const [summarizingGrantId, setSummarizingGrantId] = useState<number | null>(null);
+
+
   // API handlers
   const onSearchSubmit = (query: string) => {
     fetchGrants(query);
@@ -90,19 +94,21 @@ function App() {
   };
 
   const handleSummarize = async (grantId: number) => {
-    setIsLoading(true);
+    setSummarizingGrantId(grantId);
     setError(null);
     try {
         const summary = await getGrantSummaryFromApi(grantId);
+        console.log('Received summary:', summary); // debug log
         // Find the grant to update and add the summary
         setGrants(currentGrants => currentGrants.map(grant =>
             grant.id === grantId ? { ...grant, summary } : grant
         ));
+        console.log('Grant updated with summary:', summary); // debug log
     } catch (err) {
         console.error("Summarize failed:", err);
         setError("An error occurred while generating the summary.");
     } finally {
-        setIsLoading(false);
+        setSummarizingGrantId(null);
     }
   };
 
@@ -136,6 +142,7 @@ function App() {
                 isLoading={isLoading}
                 error={error}
                 searchQuery={searchQuery}
+                summarizingGrantId={summarizingGrantId}
                 currentView={currentView}
                 onSearchSubmit={onSearchSubmit}
                 onFetchAllGrants={onFetchAllGrants}

@@ -14,6 +14,7 @@ interface DashboardProps {
     isLoading: boolean;
     error: string | null;
     searchQuery: string;
+    summarizingGrantId?: number | null;
     currentView: 'all' | 'search' | 'similar' | 'initial';
     onSearchSubmit: (query: string) => void;
     onFetchAllGrants: () => void;
@@ -23,7 +24,7 @@ interface DashboardProps {
 }
 
 const Dashboard = ({
-    grants, isLoading, error, searchQuery, currentView,
+    grants, isLoading, error, searchQuery, summarizingGrantId, currentView,
     onSearchSubmit, onFetchAllGrants, onSearchSimilarGrants, onSummarize, onResetToInitial
 }: DashboardProps) => {
     const [opened, { toggle }] = useDisclosure();
@@ -109,6 +110,7 @@ const Dashboard = ({
                         <GrantsResults 
                             grants={grants}
                             loading={isLoading}
+                            summarizingGrantId={summarizingGrantId}
                             view={currentView as 'all' | 'search' | 'similar'}
                             searchQuery={searchQuery}
                             onSearchSimilarGrants={onSearchSimilarGrants}
