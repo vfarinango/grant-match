@@ -3,7 +3,7 @@ dotenv.config({ path: '.env' });
 
 import OpenAI from 'openai';
 import pool from '../db/connection';
-import { Grant } from '../routes/grantsRoutes';
+import { Grant } from '../types/grantMatchTypes';
 
 const openai = new OpenAI();
 

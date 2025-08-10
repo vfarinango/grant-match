@@ -1,3 +1,4 @@
+import { Grant, GrantEmbedding, SimilarGrant } from '../types/grantMatchTypes';
 import express, { Request, Response } from 'express';
 const router = express.Router(); // Create a new router instance
 
@@ -7,38 +8,6 @@ import pool from '../db/connection';
 // Import OpenAI
 import OpenAI from 'openai';
 const openai = new OpenAI();
-
-
-
-// Define an interface for the Grant data (for backend validation later)
-export interface Grant {
-  id: number;
-  title: string;
-  description: string;
-  deadline?: Date; 
-  funding_amount?: number;  
-  source?: string;
-  source_url?: string;
-  focus_areas?: string[]; 
-  posted_date?: Date; 
-  created_at?: Date;
-  summary?: string;
-}
-
-// embeddings interface
-export interface GrantEmbedding {
-  id: number;
-  grant_id: number;
-  embedding_type: 'full_text' | 'title' | 'description';
-  embedding: number[];
-  model_version: string;
-  created_at: Date;
-}
-
-// Specific interface for similar search results
-export interface SimilarGrant extends Grant {
-  similarity_score: number; 
-}
 
 
 // Test "Health" check route
@@ -338,14 +307,4 @@ try {
 
 
 export default router; 
-
-// Summarize grant feature backend: 
-// Update the grants model to include an optional summary.
-// Write a function that takes in a grant, sends a request to openAI and generates a summary. 
-// Write a patch request that runs that function and adds the summary to the grant.
-// https://github.com/Ada-C23/NPC-Generator/blob/solution-with-gemini/app/routes/character_routes.py
-// https://github.com/Ada-C23/pet_name_generator/blob/solution/app/routes/pet_routes.py
-// Validate helper functions (validate specific grant, make it a dict, use that dict to update the existing model)
-
-
 
