@@ -1,27 +1,43 @@
 import pool from '../db/connection';
 import { Grant, GrantEmbedding } from '../types/grantMatchTypes';
-import { GrantsGovDetailsResponse } from '../types/grantsGovApiTypes';
+import { EtlResult } from '../types/etlTypes';
+import { GrantsGovDetailsResponse, GrantsGovOpportunity } from '../types/grantsGovApiTypes';
 import OpenAI from 'openai';
 
 const openai = new OpenAI({
     apiKey: process.env.OPENAI_API_KEY,
 });
 
+type ConsolidatedGrant = GrantsGovOpportunity & { details: GrantsGovDetailsResponse };
+
 interface ProcessedGrant {
-    grant: Omit<Grant, 'id'>;
+    grant: Omit<Grant, 'id' | 'summary'>;
     embeddings: Omit<GrantEmbedding, 'id' | 'grant_id'>[];
 }
 
-export async function processAndLoadGrants(grantsGovData: GrantsGovDetailsResponse[], opportunityData: any[]): Promise<void> {
-    console.log(`🔄 Processing ${grantsGovData.length} grants from Grants.gov...`);
+export async function processAndLoadGrants(etlResult: EtlResult): Promise<void> {
+    const { detailResponses, opportunityData } = etlResult;
+    console.log(`🔄 Processing ${detailResponses.length} grants from Grants.gov...`);
     
-    if (grantsGovData.length !== opportunityData.length) {
-        throw new Error('Mismatch between grants detail data and opportunity data arrays');
+    // Check for an empty result set before proceeding
+    if (detailResponses.length === 0) {
+        console.log('⚠️  No grants to process. Exiting.');
+        return;
     }
-    
+
+    // Consolidate the two arrays into a single, enriched grants array
+    const consolidatedGrants: ConsolidatedGrant[] = opportunityData.map(opp => {
+        const details = detailResponses.find(dr => dr.data.id === parseInt(opp.id, 10));
+        // The pipeline ensures 'details' is not undefined, but a fallback is good practice
+        if (!details) {
+            throw new Error(`Details not found for opportunity ID: ${opp.id}`);
+        }
+        return { ...opp, details };
+    });
+
     try {
         // Process grants and generate embeddings
-        const processedGrants = await processGrantsForStorage(grantsGovData, opportunityData);
+        const processedGrants = await processGrantsForStorage(consolidatedGrants);
         
         // Store in database
         await storeGrantsInDatabase(processedGrants);
@@ -33,37 +49,34 @@ export async function processAndLoadGrants(grantsGovData: GrantsGovDetailsRespon
     }
 }
 
-async function processGrantsForStorage(grantsGovData: GrantsGovDetailsResponse[], opportunityData: any[]): Promise<ProcessedGrant[]> {
+async function processGrantsForStorage(consolidatedGrants: ConsolidatedGrant[]): Promise<ProcessedGrant[]> {
     const processed: ProcessedGrant[] = [];
     
     console.log('📝 Converting Grants.gov data to our Grant format...');
     
-    for (let i = 0; i < grantsGovData.length; i++) {
+    for (const grant of consolidatedGrants) {
         try {
-            const grantData = grantsGovData[i];
-            const oppData = opportunityData[i];
-            
-            const grant = mapGrantsGovToGrant(grantData, oppData);
-            const embeddings = await generateEmbeddings(grant);
+            const ourGrantFormat = mapGrantsGovToGrant(grant);
+            const embeddings = await generateEmbeddings(ourGrantFormat);
             
             processed.push({
-                grant,
+                grant: ourGrantFormat,
                 embeddings
             });
             
-            console.log(`✓ Processed: ${grant.title.substring(0, 50)}...`);
+            console.log(`✓ Processed: ${ourGrantFormat.title.substring(0, 50)}...`);
         } catch (error) {
-            console.error(`❌ Error processing grant at index ${i}:`, error);
-            // Continue processing other grants
+            console.error(`❌ Error processing grant:`, error);
+            // Continue processing other grants to not halt the entire pipeline
         }
     }
     
     return processed;
 }
 
-function mapGrantsGovToGrant(grantsGovData: GrantsGovDetailsResponse, opportunityData: any): Omit<Grant, 'id'> {
-    const { data } = grantsGovData;
-    const synopsis = data.synopsis;
+function mapGrantsGovToGrant(consolidatedGrant: ConsolidatedGrant): Omit<Grant, 'id' | 'summary'> {
+    const { details, ...opportunityData } = consolidatedGrant;
+    const synopsis = details.data.synopsis;
     
     // Parse deadline from opportunity data
     let deadline: Date | undefined;

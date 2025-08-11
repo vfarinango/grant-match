@@ -83,11 +83,3 @@ async function generateAndStoreGrantEmbeddings() {
 
 // Execute the main function
 generateAndStoreGrantEmbeddings();
-
-
-// // DO NOT RUN YET --- URGENT REFACTOR:
-// // set up db with migrations folder (just in case)
-// // Using current db:
-//     // update grants table to remove embedding VECTOR(1536)
-//     // create new vector-embeddings table in db for vector embeddings
-//     // set up grant id as FK to vector-embeddings table
