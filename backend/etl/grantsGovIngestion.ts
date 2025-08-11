@@ -230,19 +230,25 @@ export function transformGrantsGovGrant(rawGrant: GrantsGovOpportunity, detailed
     const { synopsis } = detailedData.data;
 
     // Cleanly format funding amount based on available values
-    let fundingAmount: string | undefined;
-    if (synopsis.awardFloor && synopsis.awardCeiling) {
-        fundingAmount = `${synopsis.awardFloor} - ${synopsis.awardCeiling}`;
-    } else if (synopsis.awardFloor) {
-        fundingAmount = `${synopsis.awardFloor}`;
-    } else if (synopsis.awardCeiling) {
-        fundingAmount = `${synopsis.awardCeiling}`;
+    let fundingAmount: number | undefined;
+    if (synopsis?.awardCeiling && synopsis.awardCeiling !== 'none') {
+        const ceilingStr = synopsis.awardCeiling.replace(/[$,]/g, '');
+        const parsedAmount = parseFloat(ceilingStr);
+        if (!isNaN(parsedAmount)) {
+            fundingAmount = parsedAmount;
+        }
+    } else if (synopsis?.awardFloor && synopsis.awardFloor !== 'none') {
+        const floorStr = synopsis.awardFloor.replace(/[$,]/g, '');
+        const parsedAmount = parseFloat(floorStr);
+        if (!isNaN(parsedAmount)) {
+            fundingAmount = parsedAmount;
+        }
     }
 
     return {
         id: parseInt(rawGrant.id, 10),
         title: rawGrant.title,
-        description: synopsis.synopsisDesc,
+        description: synopsis.synopsisDesc || '',
         deadline: rawGrant.closeDate ? new Date(rawGrant.closeDate) : undefined,
         funding_amount: fundingAmount, 
         source: rawGrant.agency,

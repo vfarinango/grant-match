@@ -85,7 +85,7 @@ router.get('/search', async (req: Request, res: Response) => {
       JOIN grant_embeddings ge ON g.id = ge.grant_id
       WHERE ge.embedding_type = 'full_text'
       ORDER BY similarity_score DESC
-      LIMIT 10
+      LIMIT 50
       `,
       [vectorString] // Pass the formatted vector string
     );

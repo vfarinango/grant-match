@@ -88,15 +88,15 @@ function mapGrantsGovToGrant(consolidatedGrant: ConsolidatedGrant): Omit<Grant, 
     let postedDate: Date | undefined;
     if (opportunityData.openDate) {
         postedDate = new Date(opportunityData.openDate);
-    }
+    } 
     
-    // Format funding amount
-    let fundingAmount: string | undefined;
+    let fundingAmount: number | undefined;
     if (synopsis?.awardCeiling && synopsis.awardCeiling !== 'none') {
-        if (synopsis.awardFloor && synopsis.awardFloor !== 'none') {
-            fundingAmount = `${synopsis.awardFloor} - ${synopsis.awardCeiling}`;
-        } else {
-            fundingAmount = `Up to ${synopsis.awardCeiling}`;
+        // Clean the string by removing text and commas, then parse it
+        const ceilingStr = synopsis.awardCeiling.replace(/[$,]/g, '');
+        const parsedAmount = parseFloat(ceilingStr);
+        if (!isNaN(parsedAmount)) {
+            fundingAmount = parsedAmount;
         }
     }
     

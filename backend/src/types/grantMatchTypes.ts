@@ -8,7 +8,7 @@ export interface Grant {
     title: string;
     description: string;
     deadline?: Date; 
-    funding_amount?: string;  
+    funding_amount?: number;  
     source?: string;
     source_url?: string;
     focus_areas?: string[]; 
