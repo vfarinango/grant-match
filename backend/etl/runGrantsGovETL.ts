@@ -6,49 +6,53 @@ import { EtlOptions, EtlResult } from '../src/types/etlTypes';
 // Load environment variables
 dotenv.config();
 
+// ----------------------------------------------------------
+// -------------------- CONFIGURATION -----------------------
+// ----------------------------------------------------------
+
 // --- SEARCH STRATEGY (using short codes) ---
-// Curated list of relevant CFDA codes for client-side filtering
-const PRIORITY_CFDA_CODES = [
-    '47.041', // Engineering Grants (NSF)
-    '47.049', // Mathematical and Physical Sciences (NSF)
-    '93.837', // Cardiovascular Diseases Research (NIH)
-    '93.213', // Research and Training in Complementary and Integrative Health
-    '81.087', // Renewable Energy Research and Development (DOE)
-    '15.931', // Cooperative Research Units (DOI)
-    '66.508', // Water Pollution Control Research (EPA)
-    '43.001'  // Aeronautics and Space Research and Technology (NASA)
-];
-
-const PRIORITY_AGENCIES = [
-    'NSF', 'NIH', 'DOE', 'NASA', 'NIST', 'EPA', 'DOD', 'USDA'
-];
-
-// High-value keywords for client-side filtering
-const HIGH_VALUE_KEYWORDS = [
-    // Core R&D
-    'research', 'innovation', 'development', 'technology', 'engineering', 'prototype', 'design',
-
-    // Science & Academic
-    'science', 'STEM', 'mathematics', 'physics', 'chemistry', 'biology', 'astronomy',
-
-    // Health & Medical
-    'health', 'public health', 'medicine', 'biomedical', 'epidemiology', 'mental health', 'healthcare',
-
-    // Environment & Energy
-    'environment', 'climate', 'sustainability', 'renewable energy', 'conservation', 'biodiversity',
-
-    // Education & Workforce
-    'education', 'training', 'workforce development', 'teacher', 'curriculum',
-
-    // Social Impact & Policy
-    'community', 'nonprofit', 'arts', 'culture', 'human rights', 'justice', 'equity',
-
-    // Emerging Tech
-    'artificial intelligence', 'machine learning', 'data science', 'cybersecurity', 'robotics'
-];
+const ETL_CONFIG = {
+    priorityAgencies: [
+        'NSF', 'NIH', 'DOE', 'NASA', 'NIST', 'EPA', 'DOD', 'USDA'
+    ],
+    priorityCFDACodes: [
+        '47.041', // Engineering Grants (NSF)
+        '47.049', // Mathematical and Physical Sciences (NSF)
+        '93.837', // Cardiovascular Diseases Research (NIH)
+        '93.213', // Research and Training in Complementary and Integrative Health
+        '81.087', // Renewable Energy Research and Development (DOE)
+        '15.931', // Cooperative Research Units (DOI)
+        '66.508', // Water Pollution Control Research (EPA)
+        '43.001'  // Aeronautics and Space Research and Technology (NASA)
+    ],
+    high_value_keywords: [
+        // Core R&D
+        'research', 'innovation', 'development', 'technology', 'engineering', 'prototype', 'design',
+    
+        // Science & Academic
+        'science', 'STEM', 'mathematics', 'physics', 'chemistry', 'biology', 'astronomy',
+    
+        // Health & Medical
+        'health', 'public health', 'medicine', 'biomedical', 'epidemiology', 'mental health', 'healthcare',
+    
+        // Environment & Energy
+        'environment', 'climate', 'sustainability', 'renewable energy', 'conservation', 'biodiversity',
+    
+        // Education & Workforce
+        'education', 'training', 'workforce development', 'teacher', 'curriculum',
+    
+        // Social Impact & Policy
+        'community', 'nonprofit', 'arts', 'culture', 'human rights', 'justice', 'equity',
+    
+        // Emerging Tech
+        'artificial intelligence', 'machine learning', 'data science', 'cybersecurity', 'robotics'
+    ]
+}
 
 
-// --- MAIN ETL PIPELINE ---
+// ----------------------------------------------------------
+// -------------------- MAIN ETL PIPELINE -------------------
+// ----------------------------------------------------------
 
 async function runFullEtlPipeline(options: EtlOptions = {}): Promise<void> {
     const startTime = Date.now();
@@ -62,10 +66,10 @@ async function runFullEtlPipeline(options: EtlOptions = {}): Promise<void> {
 
         
         const grantsData: EtlResult = await fetchAndProcessAllOpportunities({
-            agencies: options.agencies || PRIORITY_AGENCIES,
+            agencies: options.agencies || ETL_CONFIG.priorityAgencies,
+            searchTerms: options.searchTerms || ETL_CONFIG.high_value_keywords,
+            cfdaCodes: options.cfdaCodes || ETL_CONFIG.priorityCFDACodes,
             rows: options.rows || 250,
-            searchTerms: options.searchTerms || HIGH_VALUE_KEYWORDS,
-            cfdaCodes: options.cfdaCodes || PRIORITY_CFDA_CODES 
         });
         
         if (grantsData.detailResponses.length === 0) {
@@ -97,6 +101,8 @@ async function runFullEtlPipeline(options: EtlOptions = {}): Promise<void> {
         console.log('\n🎉 ETL Pipeline Complete!');
         console.log(`⏱️  Total runtime: ${duration} seconds`);
         console.log(`📈 Processed: ${grantsData.detailResponses.length} grants`);
+
+        
         
     } catch (error) {
         console.error('\n❌ ETL Pipeline Failed:', error);

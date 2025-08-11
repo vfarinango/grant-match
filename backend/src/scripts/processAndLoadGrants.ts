@@ -1,14 +1,14 @@
 import pool from '../db/connection';
 import { Grant, GrantEmbedding } from '../types/grantMatchTypes';
 import { EtlResult } from '../types/etlTypes';
-import { GrantsGovDetailsResponse, GrantsGovOpportunity } from '../types/grantsGovApiTypes';
+import { GrantsGovDetailsResponse, GrantsGovOpportunity, ConsolidatedGrant } from '../types/grantsGovApiTypes';
+import { mapGrantsGovToGrant } from '../../etl/grantsGovIngestion';
 import OpenAI from 'openai';
 
 const openai = new OpenAI({
     apiKey: process.env.OPENAI_API_KEY,
 });
 
-type ConsolidatedGrant = GrantsGovOpportunity & { details: GrantsGovDetailsResponse };
 
 interface ProcessedGrant {
     grant: Omit<Grant, 'id' | 'summary'>;
@@ -26,6 +26,7 @@ export async function processAndLoadGrants(etlResult: EtlResult): Promise<void> 
     }
 
     // Consolidate the two arrays into a single, enriched grants array
+    // This part of the code is now more resilient with our refined types.
     const consolidatedGrants: ConsolidatedGrant[] = opportunityData.map(opp => {
         const details = detailResponses.find(dr => dr.data.id === parseInt(opp.id, 10));
         // The pipeline ensures 'details' is not undefined, but a fallback is good practice
@@ -36,12 +37,8 @@ export async function processAndLoadGrants(etlResult: EtlResult): Promise<void> 
     });
 
     try {
-        // Process grants and generate embeddings
         const processedGrants = await processGrantsForStorage(consolidatedGrants);
-        
-        // Store in database
         await storeGrantsInDatabase(processedGrants);
-        
         console.log('✅ Successfully processed and loaded all grants!');
     } catch (error) {
         console.error('❌ Error processing and loading grants:', error);
@@ -51,87 +48,36 @@ export async function processAndLoadGrants(etlResult: EtlResult): Promise<void> 
 
 async function processGrantsForStorage(consolidatedGrants: ConsolidatedGrant[]): Promise<ProcessedGrant[]> {
     const processed: ProcessedGrant[] = [];
-    
     console.log('📝 Converting Grants.gov data to our Grant format...');
     
     for (const grant of consolidatedGrants) {
         try {
-            const ourGrantFormat = mapGrantsGovToGrant(grant);
-            const embeddings = await generateEmbeddings(ourGrantFormat);
+            const appGrantFormat = mapGrantsGovToGrant(grant);
+            const embeddings = await generateEmbeddings(appGrantFormat);
             
             processed.push({
-                grant: ourGrantFormat,
+                grant: appGrantFormat,
                 embeddings
             });
             
-            console.log(`✓ Processed: ${ourGrantFormat.title.substring(0, 50)}...`);
+            console.log(`✓ Processed: ${appGrantFormat.title.substring(0, 50)}...`);
         } catch (error) {
             console.error(`❌ Error processing grant:`, error);
-            // Continue processing other grants to not halt the entire pipeline
+            // The mapGrantsGovToGrant function now handles errors more gracefully, so
+            // this catch block might not be triggered for missing data, but it's good to keep.
         }
     }
-    
     return processed;
 }
-
-function mapGrantsGovToGrant(consolidatedGrant: ConsolidatedGrant): Omit<Grant, 'id' | 'summary'> {
-    const { details, ...opportunityData } = consolidatedGrant;
-    const synopsis = details.data.synopsis;
-    
-    // Parse deadline from opportunity data
-    let deadline: Date | undefined;
-    if (opportunityData.closeDate) {
-        deadline = new Date(opportunityData.closeDate);
-    }
-    
-    // Parse posted date from opportunity data
-    let postedDate: Date | undefined;
-    if (opportunityData.openDate) {
-        postedDate = new Date(opportunityData.openDate);
-    } 
-    
-    let fundingAmount: number | undefined;
-    if (synopsis?.awardCeiling && synopsis.awardCeiling !== 'none') {
-        // Clean the string by removing text and commas, then parse it
-        const ceilingStr = synopsis.awardCeiling.replace(/[$,]/g, '');
-        const parsedAmount = parseFloat(ceilingStr);
-        if (!isNaN(parsedAmount)) {
-            fundingAmount = parsedAmount;
-        }
-    }
-    
-    // Use CFDA list for focus areas (official government classifications)
-    let focusAreas: string[] = [];
-    if (opportunityData.cfdaList && opportunityData.cfdaList.length > 0) {
-        focusAreas = opportunityData.cfdaList.slice(0, 5); // Limit to 5
-    }
-    // No fallback keyword extraction - let semantic search handle discovery
-    
-    return {
-        title: opportunityData.title,
-        description: synopsis?.synopsisDesc || '',
-        deadline,
-        funding_amount: fundingAmount,
-        source: opportunityData.agency || 'Unavailable ☹️',
-        source_url: synopsis?.fundingDescLinkUrl,
-        focus_areas: focusAreas,
-        posted_date: postedDate,
-        created_at: new Date()
-    };
-}
-
-// Note: We rely on semantic embeddings for content discovery rather than keyword matching
-// This allows users to find relevant grants through natural language queries
 
 async function generateEmbeddings(grant: Omit<Grant, 'id'>): Promise<Omit<GrantEmbedding, 'id' | 'grant_id'>[]> {
     const embeddings: Omit<GrantEmbedding, 'id' | 'grant_id'>[] = [];
     
     try {
-        // Generate embedding for full text (title + description)
         const fullText = `${grant.title} ${grant.description}`;
         const fullTextEmbedding = await openai.embeddings.create({
             model: 'text-embedding-3-small',
-            input: fullText.substring(0, 8000), // Limit to prevent token limit issues
+            input: fullText.substring(0, 8000),
             encoding_format: 'float',
         });
         
@@ -142,7 +88,6 @@ async function generateEmbeddings(grant: Omit<Grant, 'id'>): Promise<Omit<GrantE
             created_at: new Date()
         });
         
-        // Generate embedding for title only
         const titleEmbedding = await openai.embeddings.create({
             model: 'text-embedding-3-small',
             input: grant.title,
@@ -156,27 +101,23 @@ async function generateEmbeddings(grant: Omit<Grant, 'id'>): Promise<Omit<GrantE
             created_at: new Date()
         });
         
-        // Add small delay to respect rate limits
         await new Promise(resolve => setTimeout(resolve, 100));
-        
     } catch (error) {
         console.error('Error generating embeddings:', error);
         throw error;
     }
-    
     return embeddings;
 }
+
 
 async function storeGrantsInDatabase(processedGrants: ProcessedGrant[]): Promise<void> {
     const client = await pool.connect();
     
     try {
         await client.query('BEGIN');
-        
         console.log('💾 Storing grants in database...');
         
         for (const { grant, embeddings } of processedGrants) {
-            // Check if grant already exists (by title and source to avoid duplicates)
             const existingGrant = await client.query(
                 'SELECT id FROM grants WHERE title = $1 AND source = $2',
                 [grant.title, grant.source]
@@ -185,14 +126,15 @@ async function storeGrantsInDatabase(processedGrants: ProcessedGrant[]): Promise
             let grantId: number;
             
             if (existingGrant.rows.length > 0) {
-                // Update existing grant
                 grantId = existingGrant.rows[0].id;
+                // Updated query to include new fields
                 await client.query(`
                     UPDATE grants 
                     SET description = $1, deadline = $2, funding_amount = $3, 
                         source_url = $4, focus_areas = $5, posted_date = $6, 
-                        created_at = COALESCE(created_at, $7)
-                    WHERE id = $8
+                        created_at = COALESCE(created_at, $7), 
+                        agency = $8, eligibility_description = $9, focus_area_titles = $10 
+                    WHERE id = $11
                 `, [
                     grant.description,
                     grant.deadline,
@@ -201,16 +143,20 @@ async function storeGrantsInDatabase(processedGrants: ProcessedGrant[]): Promise
                     grant.focus_areas,
                     grant.posted_date,
                     grant.created_at,
+                    grant.agency, // New field
+                    grant.eligibility_description, // New field
+                    grant.focus_area_titles, // New field
                     grantId
                 ]);
                 
                 console.log(`📝 Updated existing grant: ${grant.title.substring(0, 50)}...`);
             } else {
-                // Insert new grant
+                // Updated query to include new fields
                 const insertResult = await client.query(`
                     INSERT INTO grants (title, description, deadline, funding_amount, source, 
-                                      source_url, focus_areas, posted_date, created_at)
-                    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+                        source_url, focus_areas, posted_date, created_at,
+                        agency, eligibility_description, focus_area_titles)
+                    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
                     RETURNING id
                 `, [
                     grant.title,
@@ -221,20 +167,21 @@ async function storeGrantsInDatabase(processedGrants: ProcessedGrant[]): Promise
                     grant.source_url,
                     grant.focus_areas,
                     grant.posted_date,
-                    grant.created_at
+                    grant.created_at,
+                    grant.agency, // New field
+                    grant.eligibility_description, // New field
+                    grant.focus_area_titles // New field
                 ]);
                 
                 grantId = insertResult.rows[0].id;
                 console.log(`✨ Inserted new grant: ${grant.title.substring(0, 50)}...`);
             }
             
-            // Handle embeddings
             await storeEmbeddings(client, grantId, embeddings);
         }
         
         await client.query('COMMIT');
         console.log(`✅ Successfully stored ${processedGrants.length} grants in database!`);
-        
     } catch (error) {
         await client.query('ROLLBACK');
         console.error('❌ Database error:', error);
@@ -244,16 +191,15 @@ async function storeGrantsInDatabase(processedGrants: ProcessedGrant[]): Promise
     }
 }
 
+
 async function storeEmbeddings(client: any, grantId: number, embeddings: Omit<GrantEmbedding, 'id' | 'grant_id'>[]): Promise<void> {
     for (const embedding of embeddings) {
-        // Check if embedding already exists
         const existingEmbedding = await client.query(
             'SELECT id FROM grant_embeddings WHERE grant_id = $1 AND embedding_type = $2 AND model_version = $3',
             [grantId, embedding.embedding_type, embedding.model_version]
         );
         
         if (existingEmbedding.rows.length > 0) {
-            // Update existing embedding
             await client.query(`
                 UPDATE grant_embeddings 
                 SET embedding = $1, created_at = $2
@@ -266,7 +212,6 @@ async function storeEmbeddings(client: any, grantId: number, embeddings: Omit<Gr
                 embedding.model_version
             ]);
         } else {
-            // Insert new embedding
             await client.query(`
                 INSERT INTO grant_embeddings (grant_id, embedding_type, embedding, model_version, created_at)
                 VALUES ($1, $2, $3, $4, $5)
@@ -280,6 +225,7 @@ async function storeEmbeddings(client: any, grantId: number, embeddings: Omit<Gr
         }
     }
 }
+
 
 // Utility function to get processing stats
 export async function getProcessingStats(): Promise<void> {
@@ -296,7 +242,6 @@ export async function getProcessingStats(): Promise<void> {
         console.log(`   Total grants: ${grantsCount.rows[0].count}`);
         console.log(`   Total embeddings: ${embeddingsCount.rows[0].count}`);
         console.log(`   Grants added in last 24h: ${recentGrants.rows[0].count}`);
-        
     } catch (error) {
         console.error('Error getting stats:', error);
     } finally {

@@ -1,82 +1,48 @@
 // ---------------------------------------------------------------------
-// ------------------ Grants.Gov API Interfaces ------------------------
+// ------------------ Grants.Gov API Interfaces (Refined) ----------------
+//
+// These interfaces have been simplified to include only the fields
+// relevant to the GrantMatch application's ETL pipeline and data model.
 // ---------------------------------------------------------------------
 
-// Search2 Endpoint: Fetch all relevant grants
-// Reusable interface for simple label/value/count options
-export interface GrantsGovOption {
+/**
+ * Reusable type for simple label/value/count options.
+ */
+export interface GrantsGovOption<T = string> {
     label: string;
-    value: string;
+    value: T;
     count: number;
 }
 
-// Interface for sub-agency options within an agency
-export interface GrantsGovSubAgencyOption extends GrantsGovOption {}
-
-// Interface for the agencies array
-export interface GrantsGovAgency {
-    subAgencyOptions: GrantsGovSubAgencyOption[];
-    label: string;
-    value: string;
-    count: number;
-}
-
-// Interface for a single grant opportunity from the API response
+/**
+ * Interface for a single grant from the search2 endpoint.
+ *
+ * NOTE: This is a partial view, including only the fields we use
+ * for initial fetching and filtering.
+ */
 export interface GrantsGovOpportunity {
-    id: string;
-    number: string;
+    id: string; // The unique ID for the grant. Maps to our Grant.id.
     title: string;
     agencyCode: string;
     agency: string;
-    openDate: string;
-    closeDate: string;
+    openDate: string; // Maps to our Grant.posted_date.
+    closeDate: string; // Maps to our Grant.deadline.
     oppStatus: string;
-    docType: string;
-    cfdaList: string[];
+    cfdaList: string[]; // List of CFDA numbers. Maps to our Grant.focus_areas.
 }
-// export interface GrantsGovOpportunity {
-//     id: string;            // Grant.id (converted to number)
-//     title: string;         // Grant.title
-//     closeDate?: string;    // Grant.deadline
-//     agency?: string;       // Grant.source
-//     cfdaList?: string[];   // Grant.focus_areas
-//     openDate?: string;     // Grant.posted_date
-// }
 
-// Interface for the 'data' object in the API response
+/**
+ * Interface for the 'data' object of the search2 API response.
+ */
 export interface GrantsGovResponseData {
-    searchParams: {
-        resultType: string;
-        searchOnly: boolean;
-        oppNum: string;
-        cfda: string;
-        sortBy: string;
-        oppStatuses: string;
-        startRecordNum: number;
-        eligibilities: string;
-        fundingInstruments: string;
-        fundingCategories: string;
-        agencies: string;
-        rows: number;
-        keyword: string;
-        keywordEncoded: boolean;
-    };
     hitCount: number;
     startRecord: number;
     oppHits: GrantsGovOpportunity[];
-    oppStatusOptions: GrantsGovOption[];
-    dateRangeOptions: GrantsGovOption[];
-    suggestion: string;
-    eligibilities: GrantsGovOption[];
-    fundingCategories: GrantsGovOption[];
-    fundingInstruments: GrantsGovOption[];
-    agencies: GrantsGovAgency[];
-    accessKey: string;
-    errorMsgs: string[];
 }
 
-
-// Main interface for the entire API response
+/**
+ * The full response from the search2 endpoint.
+ */
 export interface GrantsGovResponse {
     errorcode: number;
     msg: string;
@@ -84,237 +50,60 @@ export interface GrantsGovResponse {
     data: GrantsGovResponseData;
 }
 
-// Enhanced search parameters interface
-export interface GrantsGovSearchParams {
-    keyword?: string;
-    oppNum?: string;
-    oppStatuses?: string;        // "posted|forecasted" for active grants
-    fundingCategories?: string[];  // Filter by funding category
-    agencies?: string[];           // Filter by specific agencies
-    eligibilities?: string;      // Filter by eligibility types
-    fundingInstruments?: string; // Filter by funding instrument types
-    rows?: number;               // Number of results to return
-    sortBy?: string;             // Sort criteria
-    startRecordNum?: number;     // Pagination support
-}
-
-
-// ----------------------------------------------------------
-// FetchOpportunity endpoint: Fetch details for each relevant grant
-// ----------------------------------------------------------
-
-// export interface GrantsGovDetailsResponse {
-//     errorcode: number;
-//     msg: string;
-//     token: string;
-//     data: {
-//         synopsis: {
-//             opportunityId: number;      // Grant ID from Search2 endpoint
-//             synopsisDesc: string;       // Grant.description
-//             awardFloor?: string;        // Grant.funding_amount
-//             awardCeiling?: string;      // Grant.funding_amount
-//             fundingDescLinkUrl: string; // Grant.source_url (MVP requirement)
-//         };
-//     };
-// }
-
-
-// Interface for opportunity category
-interface OpportunityCategory {
-    category: string;
-    description: string;
-}
-
-// Interface for agency details
-interface AgencyDetails {
-    code: string;
-    seed: string;
-    agencyName: string;
-    agencyCode: string;
-    topAgencyCode: string;
-}
-
-// Interface for applicant types
-interface ApplicantType {
-    id: string;
-    description: string;
-}
-
-// Interface for funding instruments
-interface FundingInstrument {
-    id: string;
-    description: string;
-}
-
-// Interface for funding activity categories
-interface FundingActivityCategory {
-    id: string;
-    description: string;
-}
-
-// Interface for CFDA information
-interface Cfda {
-    id: number;
-    opportunityId: number;
-    revision?: number;
-    cfdaNumber?: string;
-    programTitle?: string;
-}
-
-// Interface for synopsis
-interface Synopsis {
-    opportunityId: number;
-    version: number;
-    agencyCode: string;
-    agencyName: string;
-    agencyPhone: string;
-    agencyAddressDesc: string;
-    agencyDetails: AgencyDetails;
-    topAgencyDetails: AgencyDetails;
-    agencyContactPhone: string;
-    agencyContactName: string;
-    agencyContactDesc: string;
-    agencyContactEmail: string;
-    agencyContactEmailDesc: string;
-    synopsisDesc: string;
-    responseDateDesc: string;
-    fundingDescLinkUrl: string;
-    fundingDescLinkDesc: string;
-    postingDate: string;
-    costSharing: boolean;
-    awardCeiling: string;
-    awardFloor: string;
-    sendEmail: string;
-    createTimeStamp: string;
-    modComments: string;
-    createdDate: string;
-    lastUpdatedDate: string;
-    applicantTypes: ApplicantType[];
-    fundingInstruments: FundingInstrument[];
-    fundingActivityCategories: FundingActivityCategory[];
-    postingDateStr: string;
-    createTimeStampStr: string;
-}
-
-// Interface for opportunity history details
-interface OpportunityHistoryDetail {
-    oppHistId: {
-        opportunityId: number;
-        revision: number;
-    };
-    opportunityId: number;
-    revision: number;
-    opportunityNumber: string;
+/**
+ * Interface for the detailed information within the fetchOpportunity response.
+ *
+ * NOTE: This has been significantly trimmed to include only the `Synopsis` and `Cfdas`
+ * data we need to enrich the `GrantsGovOpportunity` object.
+ */
+export interface GrantsGovDetailsData {
+    id: number; // The unique ID, a number type here.
     opportunityTitle: string;
     owningAgencyCode: string;
-    publisherUid: string;
-    listed: string;
-    opportunityCategory: OpportunityCategory;
     synopsis: {
-        id: {
-            opportunityId: number;
-            revision: number;
-        };
-        opportunityId: number;
-        revision: number;
-        version: number;
-        agencyCode: string;
-        agencyAddressDesc: string;
-        agencyDetails: AgencyDetails;
-        agencyContactPhone: string;
-        agencyContactName: string;
-        agencyContactDesc: string;
-        agencyContactEmail: string;
-        agencyContactEmailDesc: string;
-        synopsisDesc: string;
-        responseDateDesc: string;
-        fundingDescLinkUrl: string;
-        fundingDescLinkDesc: string;
-        postingDate: string;
-        costSharing: boolean;
+        synopsisDesc: string; // The full description. Maps to our Grant.description.
+        agencyName: string; // The full agency name. Maps to our Grant.agency.
+        applicantEligibilityDesc: string; // The eligibility text. Maps to our Grant.eligibility_description.
         awardCeiling: string;
         awardFloor: string;
-        createTimeStamp: string;
-        actionType: string;
-        actionDate: string;
-        createdDate: string;
-        lastUpdatedDate: string;
-        applicantTypes: ApplicantType[];
-        fundingInstruments: FundingInstrument[];
-        fundingActivityCategories: FundingActivityCategory[];
-        postingDateStr: string;
-        createTimeStampStr: string;
+        fundingDescLinkUrl: string; // URL for more info. Maps to our Grant.source_url.
     };
-    cfdas: Cfda[];
-    synopsisModifiedFields: string[];
-    forecastModifiedFields: string[];
+    cfdas: {
+        cfdaNumber?: string;
+        programTitle?: string; // The full program title. Maps to our Grant.focus_area_titles.
+    }[];
 }
 
-// Interface for opportunity packages
-interface OpportunityPackage {
-    id: number;
-    topportunityId: number;
-    familyId: number;
-    dialect: string;
-    opportunityNumber: string;
-    opportunityTitle: string;
-    openingDate: string;
-    closingDate: string;
-    owningAgencyCode: string;
-    agencyDetails: AgencyDetails;
-    topAgencyDetails: AgencyDetails;
-    contactInfo: string;
-    gracePeriod: number;
-    electronicRequired: string;
-    expectedApplicationCount: number;
-    openToApplicantType: number;
-    listed: string;
-    isMultiProject: string;
-    extension: string;
-    mimetype: string;
-    lastUpdate: string;
-    workspaceCompatibleFlag: string;
-    packageId: string;
-    openingDateStr: string;
-    closingDateStr: string;
-}
-
-// Main interface for the detailed response from fetchOpportunity
+/**
+ * The full response from the fetchOpportunity endpoint.
+ */
 export interface GrantsGovDetailsResponse {
     errorcode: number;
     msg: string;
     token: string;
-    data: {
-        id: number;
-        revision: number;
-        opportunityNumber: string;
-        opportunityTitle: string;
-        owningAgencyCode: string;
-        listed: string;
-        publisherUid: string;
-        flag2006: string;
-        opportunityCategory: OpportunityCategory;
-        synopsis: Synopsis;
-        agencyDetails: AgencyDetails;
-        topAgencyDetails: AgencyDetails;
-        synopsisAttachmentFolders: any[]; // Empty array in  data
-        synopsisDocumentURLs: any[]; // Empty array in data
-        synAttChangeComments: any[]; // Empty array in data
-        cfdas: Cfda[];
-        opportunityHistoryDetails: OpportunityHistoryDetail[];
-        opportunityPkgs: OpportunityPackage[];
-        closedOpportunityPkgs: any[]; // Empty array in data
-        originalDueDateDesc: string;
-        synopsisModifiedFields: string[];
-        forecastModifiedFields: string[];
-        errorMessages: any[]; // Empty array in data
-        synPostDateInPast: boolean;
-        docType: string;
-        forecastHistCount: number;
-        synopsisHistCount: number;
-        assistCompatible: boolean;
-        assistURL: string;
-        relatedOpps: any[]; // Empty array in data
-        draftMode: string;
-    };
+    data: GrantsGovDetailsData;
+}
+
+/**
+ * An object that combines the data from both the search2 and fetchOpportunity
+ * APIs. This is the core object for the ETL pipeline's mapping and transformation steps.
+ */
+export type ConsolidatedGrant = GrantsGovOpportunity & {
+    details?: GrantsGovDetailsResponse;
+};
+
+/**
+ * Enhanced search parameters for the ETL configuration.
+ */
+export interface GrantsGovSearchParams {
+    keyword?: string;
+    oppNum?: string;
+    oppStatuses?: string;
+    fundingCategories?: string[];
+    agencies?: string[];
+    eligibilities?: string;
+    fundingInstruments?: string;
+    rows?: number;
+    sortBy?: string;
+    startRecordNum?: number;
 }

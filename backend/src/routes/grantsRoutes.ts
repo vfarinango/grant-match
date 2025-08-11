@@ -31,7 +31,7 @@ router.get('/health', async (req: Request, res: Response) => {
 // GET all grants (basic testing route)
 router.get('/', async (req: Request, res: Response) => {
   try {
-    const result = await pool.query<Grant>('SELECT id, title, description, deadline, funding_amount, source, source_url, focus_areas, posted_date, summary FROM grants');
+    const result = await pool.query<Grant>('SELECT id, title, description, deadline, funding_amount, source, source_url, focus_areas, posted_date, summary, agency, eligibility_description, focus_area_titles FROM grants');
     res.json(result.rows);
   } catch (err: any) {
     console.error('Error fetching grants:', err);
@@ -39,8 +39,9 @@ router.get('/', async (req: Request, res: Response) => {
   }
 });
 
-
+// ----------------------------------------------------------------------
 // GET grants by search (Regular Search)
+// ----------------------------------------------------------------------
 router.get('/search', async (req: Request, res: Response) => {
   const userQuery: string | undefined = req.query.query as string | undefined;
   if (!userQuery) {
@@ -74,12 +75,16 @@ router.get('/search', async (req: Request, res: Response) => {
         focus_areas: string[];
         posted_date: string;
         summary: string;
-        similarity_score: number;      
+        agency: string; // NEW
+        eligibility_description: string; // NEW
+        focus_area_titles: string[]; // NEW
+        similarity_score: number;     
     }>(
       `
       SELECT
           g.id, g.title, g.description, g.deadline, g.funding_amount,
-          g.source, g.source_url, g.focus_areas, g.posted_date,
+          g.source, g.source_url, g.focus_areas, g.posted_date, g.summary,
+          g.agency, g.eligibility_description, g.focus_area_titles,
           1 - (ge.embedding <=> $1::vector) AS similarity_score
       FROM grants g
       JOIN grant_embeddings ge ON g.id = ge.grant_id
@@ -134,8 +139,9 @@ router.get('/search', async (req: Request, res: Response) => {
 });
 
 
-
+// ----------------------------------------------------------------------
 // Similar Search Feature: GET similar grants of a specific grant id
+// ----------------------------------------------------------------------
 router.get('/:id/similar', async (req: Request, res: Response) => { 
   try {
     const grantId = parseInt(req.params.id, 10);
@@ -160,16 +166,17 @@ router.get('/:id/similar', async (req: Request, res: Response) => {
 
     // Find similar grants
     const similarQuery = `
-      SELECT 
+      SELECT
         g.id, g.title, g.description, g.deadline,
-        g.funding_amount, g.source, g.source_url, 
-        g.focus_areas, g.posted_date,
+        g.funding_amount, g.source, g.source_url,
+        g.focus_areas, g.posted_date, g.summary,
+        g.agency, g.eligibility_description, g.focus_area_titles,
         1 - (ge1.embedding <=> ge2.embedding) AS similarity_score
       FROM grants g
       JOIN grant_embeddings ge1 ON g.id = ge1.grant_id
       JOIN grant_embeddings ge2 ON ge2.grant_id = $1
-      WHERE 
-        g.id != $1 
+      WHERE
+        g.id != $1
         AND (ge1.embedding <=> ge2.embedding) < ${SIMILARITY_THRESHOLD}
       ORDER BY similarity_score DESC
       LIMIT ${MAX_SIMILAR_RESULTS}
@@ -189,6 +196,9 @@ router.get('/:id/similar', async (req: Request, res: Response) => {
       focus_areas: row.focus_areas,
       posted_date: row.posted_date,
       summary: row.summary,
+      agency: row.agency, // NEW
+      eligibility_description: row.eligibility_description, // NEW
+      focus_area_titles: row.focus_area_titles, // NEW
       similarity_score: row.similarity_score
     }));
 
@@ -238,8 +248,9 @@ router.get('/:id/similar', async (req: Request, res: Response) => {
   }
 });
 
-
+// ----------------------------------------------------------------------
 // Summarize Feature: PATCH the Grant of a specific id with a summary property
+// ----------------------------------------------------------------------
 router.patch('/:id/summarize', async (req: Request, res: Response) => {
   // GET grant of a specific grant id
   const grantId = req.params.id;

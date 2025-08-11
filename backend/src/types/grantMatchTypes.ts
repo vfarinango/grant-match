@@ -10,8 +10,11 @@ export interface Grant {
     deadline?: Date; 
     funding_amount?: number;  
     source?: string;
+    agency: string;
+    eligibility_description?: string;
     source_url?: string;
     focus_areas?: string[]; 
+    focus_area_titles: string[];
     posted_date?: Date; 
     created_at?: Date;
     summary?: string;
