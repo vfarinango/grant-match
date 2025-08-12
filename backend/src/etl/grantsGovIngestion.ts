@@ -173,28 +173,31 @@ export async function fetchAndProcessAllOpportunities(options: EtlOptions): Prom
             return { ...opp, details };
         });
 
-        // Step 3: Perform client-side keyword filtering on the detailed grants
-        console.log('🎯 Step 3: Filtering grants by Agency, CFDA codes, and keywords...');
-        const relevantOpportunities = opportunitiesWithDetails.filter(opp => {
-            // It's still crucial to check for missing details
-            if (!opp.details || !opp.details.data) return false;
+        // // Step 3: Perform client-side keyword filtering on the detailed grants
+        // console.log('🎯 Step 3: Filtering grants by Agency, CFDA codes, and keywords...');
+        // const relevantOpportunities = opportunitiesWithDetails.filter(opp => {
+        //     // It's still crucial to check for missing details
+        //     if (!opp.details || !opp.details.data) return false;
             
-            const hasPriorityAgency = agencies.some(agency => opp.agencyCode === agency);
+        //     const hasPriorityAgency = agencies.some(agency => opp.agencyCode === agency);
             
-            // Refactored to use the authoritative 'cfdas' array from the details object
-            const hasPriorityCFDA = (opp.details.data.cfdas ?? []).some(cfda => {
-                // Check if cfdaNumber exists before including it
-                return cfda.cfdaNumber && cfdaCodes.includes(cfda.cfdaNumber);
-            });
+        //     // Refactored to use the authoritative 'cfdas' array from the details object
+        //     const hasPriorityCFDA = (opp.details.data.cfdas ?? []).some(cfda => {
+        //         // Check if cfdaNumber exists before including it
+        //         return cfda.cfdaNumber && cfdaCodes.includes(cfda.cfdaNumber);
+        //     });
 
-            const hasKeyword = searchTerms.some(term => {
-                const titleLower = opp.title.toLowerCase();
-                const synopsisLower = opp.details?.data.synopsis.synopsisDesc?.toLowerCase() || '';
-                return titleLower.includes(term.toLowerCase()) || synopsisLower.includes(term.toLowerCase());
-            });
+        //     const hasKeyword = searchTerms.some(term => {
+        //         const titleLower = opp.title.toLowerCase();
+        //         const synopsisLower = opp.details?.data.synopsis.synopsisDesc?.toLowerCase() || '';
+        //         return titleLower.includes(term.toLowerCase()) || synopsisLower.includes(term.toLowerCase());
+        //     });
 
-            return hasPriorityAgency || hasPriorityCFDA || hasKeyword;
-        });
+        //     return hasPriorityAgency || hasPriorityCFDA || hasKeyword;
+        // });
+         // Step 3: Perform client-side keyword filtering on the detailed grants
+        console.log('🎯 Step 3: Not performing any filtering...');
+        const relevantOpportunities = opportunitiesWithDetails;
         
         if (relevantOpportunities.length === 0) {
             console.log('⚠️ No grants matched the high-value keywords. Exiting.');
