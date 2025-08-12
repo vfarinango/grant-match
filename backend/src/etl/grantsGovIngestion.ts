@@ -1,14 +1,14 @@
 import axios from 'axios';
 import dotenv from 'dotenv';
-import { Grant } from '../src/types/grantMatchTypes'; // Grant interface
+import { Grant } from '../types/grantMatchTypes'; // Grant interface
 import {
     GrantsGovOpportunity,
     GrantsGovResponse,
     GrantsGovDetailsResponse,
     GrantsGovSearchParams,
     ConsolidatedGrant,
-}  from '../src/types/grantsGovApiTypes';
-import { EtlOptions, EtlResult } from '../src/types/etlTypes';
+}  from '../types/grantsGovApiTypes';
+import { EtlOptions, EtlResult } from '../types/etlTypes';
 
 dotenv.config();
 
