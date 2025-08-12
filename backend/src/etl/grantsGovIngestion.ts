@@ -193,7 +193,7 @@ export async function fetchAndProcessAllOpportunities(options: EtlOptions): Prom
                 return titleLower.includes(term.toLowerCase()) || synopsisLower.includes(term.toLowerCase());
             });
 
-            return hasPriorityAgency && hasPriorityCFDA && hasKeyword;
+            return hasPriorityAgency || hasPriorityCFDA || hasKeyword;
         });
         
         if (relevantOpportunities.length === 0) {
