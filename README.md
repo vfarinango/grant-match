@@ -20,25 +20,43 @@ Frontend: React, Vite, Mantine, TypeScript, Tailwind CSS.
 # Getting Started
 Follow these instructions to set up and run the project on your local machine.
 
-Prerequisites
-Node.js (LTS version) and npm
-
-PostgreSQL
-
-pgvector extension installed on your PostgreSQL server
+## Prerequisites
+1. Node.js (LTS version) and npm
+2. PostgreSQL
+3. pgvector extension installed on your PostgreSQL server
 
 
-Installation
+## Installation
 1. Clone the repository:
    git clone https://github.com/vfarinango/grant-match.git
-   cd grant-match
+   terminal command: cd grant-match
 2. Install backend dependencies: (/backend) npm install
 3. Install frontend dependencies: (/frontend) npm install
 
-Database Setup & Data Ingestion
+## Database Setup & Data Ingestion
 1. Create local databases:
 2. Using psql or a database client, create two new databases for development and testing.
-    CREATE DATABASE grant_match_development;
+    psql command: CREATE DATABASE grant_match_development;
 3. Configure environment variables:
    In your backend directory, create a .env file and add your database and OpenAI API credentials.
+   (For local database)
+   PG_USER=your_username
+   PG_HOST=localhost
+   PG_DATABASE=grant_match_development
+   PG_PASSWORD=your_password
+   PG_PORT=5432
    
+   (OpenAI Key)
+   OPENAI_API_KEY=your_openai_api_key
+
+## Run the application and trigger the ETL
+From your backend directory, start the server in development mode.
+terminal command: npm run dev
+
+In a new terminal window, trigger the ETL pipeline by making a POST request to the new endpoint. This will automatically set up your database and populate it with real grants.
+terminal command: curl -X POST http://localhost:8000/api/etl/run
+
+In a third terminal window, navigate to your frontend directory and start the Vite server.
+terminal command: cd ../frontend
+terminal command: npm run dev
+
