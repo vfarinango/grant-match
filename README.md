@@ -27,11 +27,10 @@ Follow these instructions to set up and run the project on your local machine.
 
 
 ## Installation
-1. Clone the repository:
-   git clone https://github.com/vfarinango/grant-match.git
-   terminal command: cd grant-match
-2. Install backend dependencies: (/backend) npm install
-3. Install frontend dependencies: (/frontend) npm install
+1. Clone the repository: git clone https://github.com/vfarinango/grant-match.git
+    terminal command: cd grant-match
+3. Install backend dependencies: (/backend) npm install
+4. Install frontend dependencies: (/frontend) npm install
 
 ## Database Setup & Data Ingestion
 1. Create local databases:
@@ -60,3 +59,6 @@ In a third terminal window, navigate to your frontend directory and start the Vi
 terminal command: cd ../frontend
 terminal command: npm run dev
 
+Your application will be available at http://localhost:5173
+
+✨
