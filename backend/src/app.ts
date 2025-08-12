@@ -1,7 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import grantsRoutes from './routes/grantsRoutes';
-//import { Request, Response } from 'express'; 
+import etlRoutes from './routes/etlRoutes';
 
 const app = express();
 
@@ -18,5 +18,7 @@ app.use('/api/grants', grantsRoutes);
 app.get('/', (req, res) => { // (req: Request, res: Response)
   res.send('we are at the root route of our server');
 });
+
+app.use('/api/etl', etlRoutes);
 
 export default app; 
