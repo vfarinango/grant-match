@@ -38,15 +38,16 @@ Create local databases:
     psql command: CREATE DATABASE grant_match_development;
 2. Configure environment variables:
    In your backend directory, create a .env file and add your database and OpenAI API credentials.
+
    (For local database)
-   PG_USER=your_username
-   PG_HOST=localhost
-   PG_DATABASE=grant_match_development
-   PG_PASSWORD=your_password
-   PG_PORT=5432
+   - PG_USER=your_username
+   - PG_HOST=localhost
+   - PG_DATABASE=grant_match_development
+   - PG_PASSWORD=your_password
+   - PG_PORT=5432
    
    (OpenAI Key)
-   OPENAI_API_KEY=your_openai_api_key
+   - OPENAI_API_KEY=your_openai_api_key
 
 ## Run the application and trigger the ETL
 From your backend directory, start the server in development mode.
