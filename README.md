@@ -33,10 +33,10 @@ Follow these instructions to set up and run the project on your local machine.
 4. Install frontend dependencies: (/frontend) npm install
 
 ## Database Setup & Data Ingestion
-1. Create local databases:
-2. Using psql or a database client, create two new databases for development and testing.
+Create local databases:
+1. Using psql or a database client, create two new databases for development and testing.
     psql command: CREATE DATABASE grant_match_development;
-3. Configure environment variables:
+2. Configure environment variables:
    In your backend directory, create a .env file and add your database and OpenAI API credentials.
    (For local database)
    PG_USER=your_username
