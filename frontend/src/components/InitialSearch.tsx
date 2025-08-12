@@ -1,4 +1,4 @@
-import { Group, Title, Text, Box } from '@mantine/core';
+import { Group, Text, Title, Box } from '@mantine/core'; 
 import { IconSearch } from '@tabler/icons-react';
 import SearchBar from './SearchBar';
 
@@ -34,7 +34,7 @@ const InitialSearch = ({ onSearchSubmit, isLoading }: InitialSearchProps) => {
             >
                 Find your GrantMatch
             </Title>
-            
+
             <Text 
                 c="text-secondary.0" 
                 mb="xl" 

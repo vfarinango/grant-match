@@ -1,6 +1,8 @@
 import { AppShell, Burger, Group, Text, Title, NavLink, Box, Alert } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
-import { IconSearch, IconStar, IconAlertCircle } from '@tabler/icons-react';
+import { IconSearch, IconStar, IconAlertCircle, IconAsterisk } from '@tabler/icons-react';
+import { ButterflyIcon } from './ButterflyIcon';
+
 
 // Import existing components and logic
 import SearchBar from './SearchBar';
@@ -53,15 +55,23 @@ const Dashboard = ({
         const showSearchAlert = currentView === 'search' && searchQuery && !error;
         const showGrantsResults = !error && currentView !== 'initial' && grants.length > 0;
         const showEmptyState = !isLoading && !error && grants.length === 0 && currentView !== 'initial';
-        // const showInitialEmptyState = !isLoading && !error && grants.length === 0 && currentView === 'initial';
 
         return (
             <Box>
                 {showSearchAlert && (
-                    <Alert mb="md" variant="light" color="primary-blue" mx="sm">
-                        <Text size="sm" c="text-primary.0">
-                            Search results for: <Text span fw={500} c="primary-blue.3">"{searchQuery}"</Text>
-                        </Text>
+                    <Alert 
+                        mb="sm" 
+                        variant="light" 
+                        color="primary-blue.1" 
+                        mx="sm"
+                    >
+
+                        <Group gap="sm" wrap="nowrap">
+                            <IconAsterisk size={16}/>
+                            <Text size="sm" c="primary-blue">
+                                Search results for: <Text span fw={500} c="primary-blue">"{searchQuery}"</Text>
+                            </Text>
+                        </Group>
                     </Alert>
                 )}
 
@@ -115,6 +125,7 @@ const Dashboard = ({
                 <Group h="100%" px="md" justify="space-between">
                     <Group>
                         <Burger opened={opened} onClick={toggle} hiddenFrom="sm" size="sm" />
+                        <ButterflyIcon size={32} />
                         <Title
                             order={2}
                             c="text-primary.0"

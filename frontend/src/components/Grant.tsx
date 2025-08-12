@@ -82,10 +82,10 @@ const GrantComponent = ({ grant, onSearchSimilarGrants, onSummarize, view, isBei
 
                         <Box ta="right" style={{ minWidth: 'fit-content' }} ml="md">
                             {/* Reordered: Post Date is now first */}
-                            <Text size="xs" c="text-secondary.0">Posted</Text>
+                            <Text size="xs" c="text-secondary.0">POSTED</Text>
                             <Text size="sm" c="text-primary.0" mb="xs">{formatDate(grant.posted_date)}</Text>
                             {/* Reordered: Due Date is now under Post Date */}
-                            <Text size="xs" c="text-secondary.0">Deadline</Text>
+                            <Text size="xs" c="text-secondary.0">DEADLINE</Text>
                             <Text size="sm" fw={500} c="text-primary.0">{formatDate(grant.deadline)}</Text>
                         </Box>
                     </Group>
@@ -106,12 +106,12 @@ const GrantComponent = ({ grant, onSearchSimilarGrants, onSummarize, view, isBei
                             </Text>
                         </Box>
                         
-                        <Box>
+                        {/* <Box>
                             <Text size="xs" c="text-secondary.0">Deadline</Text>
                             <Text size="sm" fw={500} c="text-primary.0">
                                 {formatDate(grant.deadline)}
                             </Text>
-                        </Box>
+                        </Box> */}
 
                         {grant.source && (
                             <Box>
@@ -154,7 +154,7 @@ const GrantComponent = ({ grant, onSearchSimilarGrants, onSummarize, view, isBei
                     {grant.summary && (
                         <Box mt="sm">
                             <Divider mb="sm" color="gray.2" />
-                            <Text size="xs" c="text-secondary.0" fw={600} mb="xs">Summary:</Text>
+                            <Text size="sm" c="primary-blue" fw={600} mb="xs">Overview:</Text>
                             <Text size="sm" c="text-primary.0" style={{ 
                                 backgroundColor: '#f8f9ff', 
                                 padding: '12px', 

@@ -1,0 +1,26 @@
+<svg width="24" height="24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background circle (optional - remove if you want transparent) -->
+  <circle cx="12" cy="12" r="12" fill="#000000"/>
+  
+  <!-- Butterfly design optimized for small size -->
+  <g fill="white">
+    <!-- Upper left wing -->
+    <path d="M12 12 Q8 6 5 7 Q3 8 5 12 Q8 10 12 12"/>
+    
+    <!-- Upper right wing -->
+    <path d="M12 12 Q16 6 19 7 Q21 8 19 12 Q16 10 12 12"/>
+    
+    <!-- Lower left wing -->
+    <path d="M12 12 Q8 14 5 17 Q3 16 5 12 Q8 14 12 12"/>
+    
+    <!-- Lower right wing -->
+    <path d="M12 12 Q16 14 19 17 Q21 16 19 12 Q16 14 12 12"/>
+    
+    <!-- Body -->
+    <ellipse cx="12" cy="12" rx="0.8" ry="4"/>
+    
+    <!-- Antennae -->
+    <circle cx="10.5" cy="9" r="0.8"/>
+    <circle cx="13.5" cy="9" r="0.8"/>
+  </g>
+</svg>

@@ -5,20 +5,20 @@ export const theme = createTheme({
     colors: {
         // Primary blue palette
         'primary-blue': [
-            '#E2E6FF', // Lightest shade
-            '#B5BFFD',
-            '#8793FA',
-            '#667eea', // Primary color
-            '#5B6CD9',
-            '#4D58C0',
-            '#3E4A9C',
-            '#2F3B77',
-            '#222B59',
-            '#1A203F'  // Darkest shade
+            '#e6f7f7', // Lightest shade, #E2E6FF (for backgrounds/hover states)
+            '#b3e6e6', // #B5BFFD (for light backgrounds)
+            '#80d4d4', // #8793FA
+            '#4dc2c2', // Primary color, #667eea
+            '#1ab0b0', // #5B6CD9
+            '#17a0a0', // #4D58C0
+            '#0b5555', // #3E4A9C
+            '#083f3f', //#2F3B77
+            '#062e2e', // #222B59
+            '#041f1f'  // Darkest shade, #1A203F
         ],
         'text-primary': ['#1a1a1a', '#1a1a1a', '#1a1a1a', '#1a1a1a', '#1a1a1a', '#1a1a1a', '#1a1a1a', '#1a1a1a', '#1a1a1a', '#1a1a1a'],
         'text-secondary': ['#666666', '#666666', '#666666', '#666666', '#666666', '#666666', '#666666', '#666666', '#666666', '#666666'],
-        'background-light': ['#f8f9ff', '#f8f9ff', '#f8f9ff', '#f8f9ff', '#f8f9ff', '#f8f9ff', '#f8f9ff', '#f8f9ff', '#f8f9ff', '#f8f9ff'],
+        'background-light': ['#f8f9ff', '#F9F9F9', '#F9FFFF', '#f8f9ff', '#f8f9ff', '#f8f9ff', '#f8f9ff', '#f8f9ff', '#f8f9ff', '#f8f9ff'],
         'background-base': ['#fafafa', '#fafafa', '#fafafa', '#fafafa', '#fafafa', '#fafafa', '#fafafa', '#fafafa', '#fafafa', '#fafafa'],    
     },
     primaryColor: 'primary-blue',
@@ -127,7 +127,7 @@ export const theme = createTheme({
             styles: (theme: MantineTheme) => ({
                 root: {
                     // This sets the base font size for the NavLink, including the icon's container
-                    fontSize: theme.fontSizes.sm, // Or whatever size you want
+                    fontSize: theme.fontSizes.sm,
                 },
                 // This targets the icon wrapper specifically and ensures its size is correct
                 leftSection: {
