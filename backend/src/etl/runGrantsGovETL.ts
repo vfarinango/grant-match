@@ -1,7 +1,7 @@
 import dotenv from 'dotenv';
 import { fetchAndProcessAllOpportunities } from './grantsGovIngestion';
-import { processAndLoadGrants, getProcessingStats } from '../src/scripts/processAndLoadGrants';
-import { EtlOptions, EtlResult } from '../src/types/etlTypes';
+import { processAndLoadGrants, getProcessingStats } from '../scripts/processAndLoadGrants';
+import { EtlOptions, EtlResult } from '../types/etlTypes';
 
 // Load environment variables
 dotenv.config();

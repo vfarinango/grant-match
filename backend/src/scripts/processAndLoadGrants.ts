@@ -2,7 +2,7 @@ import pool from '../db/connection';
 import { Grant, GrantEmbedding } from '../types/grantMatchTypes';
 import { EtlResult } from '../types/etlTypes';
 import { GrantsGovDetailsResponse, GrantsGovOpportunity, ConsolidatedGrant } from '../types/grantsGovApiTypes';
-import { mapGrantsGovToGrant } from '../../etl/grantsGovIngestion';
+import { mapGrantsGovToGrant } from '../etl/grantsGovIngestion';
 import OpenAI from 'openai';
 
 const openai = new OpenAI({
@@ -70,7 +70,7 @@ async function processGrantsForStorage(consolidatedGrants: ConsolidatedGrant[]):
     return processed;
 }
 
-async function generateEmbeddings(grant: Omit<Grant, 'id'>): Promise<Omit<GrantEmbedding, 'id' | 'grant_id'>[]> {
+async function generateEmbeddings(grant: Omit<Grant, 'id' | 'summary'>): Promise<Omit<GrantEmbedding, 'id' | 'grant_id'>[]> {
     const embeddings: Omit<GrantEmbedding, 'id' | 'grant_id'>[] = [];
     
     try {
