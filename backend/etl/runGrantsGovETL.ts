@@ -89,7 +89,7 @@ async function runFullEtlPipeline(options: EtlOptions = {}): Promise<void> {
             console.log('✅ Step 2 Complete: All grants processed and loaded\n');
         }
         
-        // Step 3: Display final stats
+        // Step 3: Display final stats /
         console.log('📊 Step 3: Displaying pipeline results...');
         if (!options.dryRun) {
             await getProcessingStats();

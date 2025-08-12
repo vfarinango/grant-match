@@ -56,6 +56,9 @@ const GrantComponent = ({ grant, onSearchSimilarGrants, onSummarize, view, isBei
         }
     };
 
+    const tagsToShow = grant.focus_area_titles.slice(0, 4); // Display only the first 5 tags
+    const hasMoreTags = grant.focus_area_titles.length > 4;
+
     return (
         <Card 
             shadow="sm" 
@@ -71,14 +74,19 @@ const GrantComponent = ({ grant, onSearchSimilarGrants, onSummarize, view, isBei
                             <Text fw={600} size="lg" mb="xs" c="text-primary.0">
                                 {grant.title}
                             </Text>
+
                             <Text size="sm" c="text-secondary.0" lineClamp={3}>
                                 {grant.description}
                             </Text>
                         </Box>
 
                         <Box ta="right" style={{ minWidth: 'fit-content' }} ml="md">
+                            {/* Reordered: Post Date is now first */}
                             <Text size="xs" c="text-secondary.0">Posted</Text>
-                            <Text size="sm" c="text-primary.0">{formatDate(grant.posted_date)}</Text>
+                            <Text size="sm" c="text-primary.0" mb="xs">{formatDate(grant.posted_date)}</Text>
+                            {/* Reordered: Due Date is now under Post Date */}
+                            <Text size="xs" c="text-secondary.0">Deadline</Text>
+                            <Text size="sm" fw={500} c="text-primary.0">{formatDate(grant.deadline)}</Text>
                         </Box>
                     </Group>
 
@@ -87,6 +95,14 @@ const GrantComponent = ({ grant, onSearchSimilarGrants, onSummarize, view, isBei
                             <Text size="xs" c="text-secondary.0">Funding Amount</Text>
                             <Text size="sm" fw={500} c="text-primary.0">
                                 {formatCurrency(grant.funding_amount)}
+                            </Text>
+                        </Box>
+
+                        {/* New: Display the agency field */}
+                        <Box>
+                            <Text size="xs" c="text-secondary.0">Agency</Text>
+                            <Text size="sm" fw={500} c="text-primary.0">
+                                {grant.agency || 'Not Specified'}
                             </Text>
                         </Box>
                         
@@ -117,14 +133,20 @@ const GrantComponent = ({ grant, onSearchSimilarGrants, onSummarize, view, isBei
                         )}
                     </Group>
 
-                    {grant.focus_areas && grant.focus_areas.length > 0 && (
-                        <Group gap="xs" mt="xs">
+                    {/* New: Loop through and display focus_area_titles */}
+                    {grant.focus_area_titles && grant.focus_area_titles.length > 0 && (
+                        <Group gap="xs" mt="sm">
                             <Text size="xs" c="text-secondary.0">Focus Areas:</Text>
-                            {grant.focus_areas.map((area, index) => (
+                            {tagsToShow.map((title, index) => (
                                 <Badge key={index} variant="outline" size="xs" color="primary-blue">
-                                    {area}
+                                    {title}
                                 </Badge>
                             ))}
+                            {hasMoreTags && (
+                                <Badge variant="outline" size="xs" color="primary-blue">
+                                    +{grant.focus_area_titles.length - 5} more
+                                </Badge>
+                            )}
                         </Group>
                     )}
 

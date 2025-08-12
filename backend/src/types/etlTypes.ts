@@ -11,6 +11,7 @@ export interface EtlOptions {
     cfdaCodes?: string[];  
 }
 
+
 export interface EtlResult {
     detailResponses: GrantsGovDetailsResponse[];
     opportunityData: GrantsGovOpportunity[];

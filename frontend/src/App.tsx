@@ -130,6 +130,25 @@ function App() {
     }
   };
 
+  // New summarize function for the detailed view
+  const handleSummarizeForDetailedView = async (grantId: number) => {
+    setSummarizingGrantId(grantId);
+    setError(null);
+    const startTime = Date.now();
+    try {
+        const summary = await getGrantSummaryFromApi(grantId);
+        const elapsed = Date.now() - startTime;
+        if (elapsed < 300) {
+            await new Promise(resolve => setTimeout(resolve, 300 - elapsed));
+        }
+        setDetailedGrantSummary(summary);
+    } catch (err) {
+        console.error("Summarize failed:", err);
+        setError("An error occurred while generating the summary.");
+    } finally {
+        setSummarizingGrantId(null);
+    }
+  };
 
   const onSelectGrant = (grantId: number) => {
     setSelectedGrantId(grantId);
@@ -189,6 +208,8 @@ function App() {
                 onSelectGrant={onSelectGrant}
                 selectedGrant={selectedGrant} 
                 onBackToResults={onBackToResults} 
+                onSummarizeForDetailedView={handleSummarizeForDetailedView}
+                detailedGrantSummary={detailedGrantSummary}
             />
         )}
 

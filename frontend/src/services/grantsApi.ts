@@ -9,7 +9,10 @@ interface Grant {
     funding_amount?: number;  
     source?: string;
     source_url?: string;
+    agency: string;
+    eligibility_description?: string;
     focus_areas?: string[]; 
+    focus_area_titles: string[];
     posted_date?: Date; 
     embedding?: number[]; 
     created_at?: Date | string;
